@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
   <title>Flappy Bird: World Championship (Web3 Neon Edition)</title>
   <style>
     :root {
@@ -101,7 +101,7 @@
     .overlay-screen {
       position: absolute;
       inset: 0;
-      background: rgba(8, 8, 20, 0.88);
+      background: rgba(8, 8, 20, 0.92);
       backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
@@ -267,7 +267,7 @@
     <div class="hud-top">
       <div style="display:flex; gap:8px;">
         <div class="hud-stat" id="hudScore">🏆 <span>0</span></div>
-        <div class="hud-stat" id="hudCoins">🪙 <span>0</span></div>
+        <div class="hud-stat" id="hudCoins">🟡 <span>0</span></div>
       </div>
       <div class="hud-controls">
         <button class="icon-btn" id="btnSound" title="Bật/Tắt Âm Thanh">🔊</button>
@@ -282,7 +282,7 @@
       <p class="subtitle">WORLD CHAMPIONSHIP • NEON EDITION</p>
       <div style="font-size:54px; margin-bottom: 24px;" id="selectedSkinPreview">🐥</div>
       <button class="btn" id="btnPlay">CHƠI NGAY (SPACE/CLICK)</button>
-      <button class="btn btn-secondary" id="btnOpenShop">CỬA HÀNG SKIN (🪙 <span id="menuCoins">0</span>)</button>
+      <button class="btn btn-secondary" id="btnOpenShop">CỬA HÀNG SKIN (🟡 <span id="menuCoins">0</span>)</button>
       <button class="btn btn-web3" id="btnOpenWeb3">⚡ WEB3 CRYPTO (ỦNG HỘ)</button>
       <p style="font-size: 11px; color: #888; margin-top: 16px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
     </div>
@@ -294,7 +294,7 @@
         <div style="font-size:14px; color:#aaa; margin-bottom:4px;">ĐIỂM ĐẠT ĐƯỢC</div>
         <div style="font-size:42px; font-weight:900; color:var(--primary); text-shadow:0 0 15px rgba(0,243,255,0.6);" id="finalScore">0</div>
         <div style="font-size:13px; color:var(--accent); margin-top:6px;">KỶ LỤC: <span id="finalHighScore">0</span></div>
-        <div style="font-size:13px; color:#fff; margin-top:4px;">🪙 NHẶT ĐƯỢC: +<span id="runCoins">0</span> COIN</div>
+        <div style="font-size:13px; color:#fff; margin-top:4px;">🟡 NHẶT ĐƯỢC: +<span id="runCoins">0</span> COIN</div>
       </div>
       <div style="display:flex; gap:8px; width:80%; margin-bottom:12px;">
         <input type="text" id="playerNameInput" placeholder="Nhập tên của bạn" maxlength="14" style="flex:1; padding:10px; background:#000; border:1px solid var(--primary); border-radius:8px; color:#fff; font-size:14px; text-align:center;">
@@ -304,16 +304,16 @@
     </div>
 
     <!-- Shop Screen -->
-    <div class="overlay-screen hidden" id="shopScreen">
+    <div class="overlay-screen hidden" id="shopScreen" style="z-index: 30;">
       <h1 class="title">CỬA HÀNG SKIN</h1>
       <p class="subtitle">SỞ HỮU SKIN ĐỘC QUYỀN VÀ HIỆU ỨNG HÀO QUANG</p>
-      <div style="font-weight:700; margin-bottom:12px; color:var(--accent);">VÍ CỦA BẠN: 🪙 <span id="shopCoins">0</span> COINS</div>
+      <div style="font-weight:700; margin-bottom:12px; color:var(--accent);">VÍ CỦA BẠN: 🟡 <span id="shopCoins">0</span> COINS</div>
       <div class="shop-grid" id="shopItemsContainer"></div>
       <button class="btn btn-secondary" id="btnCloseShop">ĐÓNG</button>
     </div>
 
     <!-- Leaderboard Screen -->
-    <div class="overlay-screen hidden" id="leaderboardScreen">
+    <div class="overlay-screen hidden" id="leaderboardScreen" style="z-index: 30;">
       <h1 class="title">BẢNG XẾP HẠNG</h1>
       <p class="subtitle">TOP 10 TUYỂN THỦ TOÀN CẦU</p>
       <div class="board-list" id="boardListContainer"></div>
@@ -321,7 +321,7 @@
     </div>
 
     <!-- Web3 Crypto Modal -->
-    <div class="overlay-screen hidden" id="web3Screen">
+    <div class="overlay-screen hidden" id="web3Screen" style="z-index: 30;">
       <h1 class="title" style="background: linear-gradient(135deg, #ffe600, #ff8800); -webkit-background-clip:text;">WEB3 TIỀN ĐIỆN TỬ</h1>
       <p class="subtitle">MỞ KHÓA SKIN HUYỀN THOẠI HOẶC ỦNG HỘ AGENT TỰ TRỊ</p>
       <div class="wallet-box">
@@ -776,7 +776,7 @@
           ctx.font = 'bold 12px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('🪙', p.coin.x, p.coin.y + Math.sin(frame * 0.1) * 6);
+          ctx.fillText('🟡', p.coin.x, p.coin.y + Math.sin(frame * 0.1) * 6);
           ctx.restore();
         }
       });
@@ -899,7 +899,7 @@
         card.innerHTML = `
           <div class="skin-icon">${skin.icon}</div>
           <div class="skin-name">${skin.name}</div>
-          <div class="skin-price">${skin.unlocked ? (skin.id === currentSkinId ? '✓ ĐANG DÙNG' : 'ĐÃ MỞ KHÓA') : (typeof skin.price === 'number' ? `🪙 ${skin.price}` : skin.price)}</div>
+          <div class="skin-price">${skin.unlocked ? (skin.id === currentSkinId ? '✓ ĐANG DÙNG' : 'ĐÃ MỞ KHÓA') : (typeof skin.price === 'number' ? `🟡 ${skin.price}` : skin.price)}</div>
         `;
         card.onclick = () => {
           if (skin.unlocked) {
@@ -981,7 +981,8 @@
         await fetch(API_BASE + '/api/score', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, score, skin: skin.name, country: 'VN' })\n        });
+          body: JSON.stringify({ name, score, skin: skin.name, country: 'VN' })
+        });
         alert('🎉 Đã ghi danh lên Bảng Xếp Hạng Toàn Cầu thành công!');
         document.getElementById('btnSubmitScore').disabled = true;
       } catch (e) {
