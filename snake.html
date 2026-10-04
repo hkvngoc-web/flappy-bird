@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+  <title>Cyber Snake 2026 (Neon Web3 Edition)</title>
+  <style>
+    :root {
+      --primary: #00ffaa;
+      --secondary: #00f3ff;
+      --accent: #ffe600;
+      --surface: rgba(20, 20, 45, 0.88);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at center, #1b1b3a 0%, #080811 100%);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #game-wrapper {
+      position: relative;
+      width: 440px;
+      height: 720px;
+      max-width: 100vw;
+      max-height: 100vh;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 255, 170, 0.25);
+      border: 3px solid rgba(0, 255, 170, 0.4);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #050510;
+    }
+    .hud-top {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-stat {
+      background: var(--surface);
+      border: 1px solid rgba(0, 255, 170, 0.3);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .hud-controls {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .icon-btn {
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+      transform: scale(1.05);
+    }
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 8, 20, 0.92);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      z-index: 20;
+      transition: opacity 0.3s;
+    }
+    .hidden {
+      display: none !important;
+    }
+    h1.title {
+      font-size: 32px;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      background: linear-gradient(135deg, #00ffaa, #00f3ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+    }
+    p.subtitle {
+      font-size: 13px;
+      color: #a0a0c0;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .btn {
+      background: linear-gradient(135deg, #00ffaa, #00aaff);
+      color: #000;
+      border: none;
+      padding: 12px 32px;
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 255, 170, 0.5);
+      transition: all 0.2s;
+      margin: 8px 0;
+      width: 240px;
+      text-align: center;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 28px rgba(0, 255, 170, 0.8);
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, #ff007f, #aa00ff);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+    }
+    .btn-web3 {
+      background: linear-gradient(135deg, #ffe600, #ff8800);
+      color: #000;
+      box-shadow: 0 0 20px rgba(255, 230, 0, 0.5);
+    }
+    .d-pad {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 180px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 6px;
+      z-index: 10;
+      pointer-events: auto;
+    }
+    .d-btn {
+      background: rgba(20, 20, 50, 0.6);
+      border: 1px solid rgba(0, 255, 170, 0.3);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+    .d-btn:active {
+      background: rgba(0, 255, 170, 0.4);
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-wrapper">
+    <canvas id="gameCanvas" width="440" height="720"></canvas>
+
+    <!-- HUD -->
+    <div class="hud-top">
+      <div style="display:flex; gap:8px;">
+        <div class="hud-stat" id="hudScore">🏆 <span>0</span></div>
+        <div class="hud-stat" id="hudCrypto">🟡 <span>0 BTC</span></div>
+      </div>
+      <div class="hud-controls">
+        <button class="icon-btn" id="btnSound" title="Âm Thanh">🔊</button>
+        <button class="icon-btn" id="btnBackFlappy" title="Về Flappy Bird">🐥</button>
+      </div>
+    </div>
+
+    <!-- On-screen D-Pad for Mobile -->
+    <div class="d-pad" id="dpad">
+      <div></div>
+      <button class="d-btn" id="btnUp">▲</button>
+      <div></div>
+      <button class="d-btn" id="btnLeft">◀</button>
+      <div style="display:flex;align-items:center;justify-content:center;color:#666;font-size:9px;">SWIPE</div>
+      <button class="d-btn" id="btnRight">▶</button>
+      <div></div>
+      <button class="d-btn" id="btnDown">▼</button>
+      <div></div>
+    </div>
+
+    <!-- Start Screen -->
+    <div class="overlay-screen" id="startScreen">
+      <h1 class="title">CYBER SNAKE</h1>
+      <p class="subtitle">NEON CRYPTO EDITION • WEB3 ARCADE</p>
+      <div style="font-size:54px; margin-bottom: 24px;">🐍</div>
+      <button class="btn" id="btnPlay">CHƠI NGAY (ARROW/SWIPE)</button>
+      <button class="btn btn-secondary" id="btnGoFlappy">🐥 CHƠI FLAPPY BIRD</button>
+      <button class="btn btn-web3" id="btnOpenWeb3">⚡ WEB3 TIỀN ĐIỆN TỬ</button>
+      <p style="font-size: 11px; color: #888; margin-top: 16px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="overlay-screen hidden" id="gameOverScreen">
+      <h1 class="title" style="background: linear-gradient(135deg, #ff0055, #ff8800); -webkit-background-clip:text;">GAME OVER</h1>
+      <div style="background:var(--surface); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px 32px; margin:16px 0; text-align:center; width:80%;">
+        <div style="font-size:14px; color:#aaa; margin-bottom:4px;">ĐIỂM SỐ</div>
+        <div style="font-size:42px; font-weight:900; color:var(--primary); text-shadow:0 0 15px rgba(0,255,170,0.6);" id="finalScore">0</div>
+        <div style="font-size:13px; color:var(--accent); margin-top:6px;">KỶ LỤC: <span id="finalHighScore">0</span></div>
+      </div>
+      <button class="btn" id="btnRestart">CHƠI LẠI</button>
+      <button class="btn btn-secondary" id="btnBackMenu">MENU CHÍNH</button>
+    </div>
+
+    <!-- Web3 Modal -->
+    <div class="overlay-screen hidden" id="web3Screen" style="z-index: 30;">
+      <h1 class="title" style="background: linear-gradient(135deg, #ffe600, #ff8800); -webkit-background-clip:text;">WEB3 TIỀN ĐIỆN TỬ</h1>
+      <p class="subtitle">ỦNG HỘ AGENT STUDIO TỰ TRỊ</p>
+      <div style="background:var(--surface); border:1px solid rgba(255,230,0,0.4); padding:16px; border-radius:12px; width:100%; text-align:center; margin-bottom:16px;">
+        <div style="font-size:12px; color:#aaa;">ĐỊA CHỈ VÍ EVM:</div>
+        <div style="font-family:monospace; font-size:11px; word-break:break-all; background:#000; padding:8px; border-radius:6px; color:#00f3ff; margin:8px 0;">0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</div>
+        <button class="btn" id="btnCopyWallet" style="width:100%; padding:8px; font-size:12px; margin:4px 0;">📋 SAO CHÉP ĐỊA CHỈ</button>
+      </div>
+      <button class="btn btn-secondary" id="btnCloseWeb3">ĐÓNG</button>
+    </div>
+  </div>
+
+  <script>
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AC();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+      }
+      eat() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      }
+      crash() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(30, now + 0.25);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      }
+    }
+    const sound = new SoundFX();
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const GRID = 20;
+    const COLS = Math.floor(W / GRID);
+    const ROWS = Math.floor((H - 180) / GRID);
+
+    let snake = [{ x: 10, y: 15 }, { x: 9, y: 15 }, { x: 8, y: 15 }];
+    let dir = { x: 1, y: 0 };
+    let nextDir = { x: 1, y: 0 };
+    let food = { x: 15, y: 15, type: 'BTC', color: '#ffe600', pts: 10 };
+    let score = 0;
+    let btcCollected = 0;
+    let highScore = parseInt(localStorage.getItem('snake_highscore') || '0', 10);
+    let gameState = 'START';
+    let speed = 110;
+    let lastTick = 0;
+
+    function spawnFood() {
+      const types = [
+        { type: 'BTC', color: '#ffe600', pts: 10 },
+        { type: 'ETH', color: '#00f3ff', pts: 25 },
+        { type: 'SOL', color: '#b026ff', pts: 50 }
+      ];
+      const selected = types[Math.floor(Math.random() * types.length)];
+      food = {
+        x: Math.floor(Math.random() * (COLS - 2)) + 1,
+        y: Math.floor(Math.random() * (ROWS - 4)) + 2,
+        ...selected
+      };
+    }
+
+    function resetGame() {
+      snake = [{ x: 10, y: 15 }, { x: 9, y: 15 }, { x: 8, y: 15 }];
+      dir = { x: 1, y: 0 };
+      nextDir = { x: 1, y: 0 };
+      score = 0;
+      btcCollected = 0;
+      spawnFood();
+      document.getElementById('hudScore').querySelector('span').innerText = '0';
+      document.getElementById('hudCrypto').querySelector('span').innerText = '0 BTC';
+    }
+
+    function setDirection(dx, dy) {
+      if (dir.x + dx === 0 && dir.y + dy === 0) return;
+      nextDir = { x: dx, y: dy };
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') setDirection(0, -1);
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') setDirection(0, 1);
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') setDirection(-1, 0);
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') setDirection(1, 0);
+    });
+
+    document.getElementById('btnUp').onclick = () => setDirection(0, -1);
+    document.getElementById('btnDown').onclick = () => setDirection(0, 1);
+    document.getElementById('btnLeft').onclick = () => setDirection(-1, 0);
+    document.getElementById('btnRight').onclick = () => setDirection(1, 0);
+
+    let touchStartX = 0, touchStartY = 0;
+    canvas.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    });
+    canvas.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 30) setDirection(1, 0);
+        else if (dx < -30) setDirection(-1, 0);
+      } else {
+        if (dy > 30) setDirection(0, 1);
+        else if (dy < -30) setDirection(0, -1);
+      }
+    });
+
+    function update() {
+      dir = nextDir;
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+      if (head.x < 0 || head.x >= COLS || head.y < 2 || head.y >= ROWS) {
+        gameOver();
+        return;
+      }
+
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          gameOver();
+          return;
+        }
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score += food.pts;
+        btcCollected++;
+        sound.eat();
+        document.getElementById('hudScore').querySelector('span').innerText = score;
+        document.getElementById('hudCrypto').querySelector('span').innerText = `${btcCollected} ${food.type}`;
+        spawnFood();
+      } else {
+        snake.pop();
+      }
+    }
+
+    function gameOver() {
+      gameState = 'GAMEOVER';
+      sound.crash();
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('snake_highscore', highScore);
+      }
+      document.getElementById('finalScore').innerText = score;
+      document.getElementById('finalHighScore').innerText = highScore;
+      document.getElementById('gameOverScreen').classList.remove('hidden');
+    }
+
+    function render() {
+      ctx.fillStyle = '#060614';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = 'rgba(0, 255, 170, 0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += GRID) {
+        ctx.beginPath(); ctx.moveTo(x, 40); ctx.lineTo(x, ROWS * GRID); ctx.stroke();
+      }
+      for (let y = 40; y < ROWS * GRID; y += GRID) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#00ffaa';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(2, 40, W - 4, (ROWS * GRID) - 40);
+
+      // Food
+      ctx.save();
+      ctx.shadowColor = food.color;
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = food.color;
+      ctx.beginPath();
+      ctx.arc(food.x * GRID + GRID/2, food.y * GRID + GRID/2, GRID/2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(food.type[0], food.x * GRID + GRID/2, food.y * GRID + GRID/2);
+      ctx.restore();
+
+      // Snake
+      snake.forEach((seg, index) => {
+        ctx.save();
+        if (index === 0) {
+          ctx.fillStyle = '#00ffaa';
+          ctx.shadowColor = '#00ffaa';
+          ctx.shadowBlur = 12;
+          ctx.fillRect(seg.x * GRID + 1, seg.y * GRID + 1, GRID - 2, GRID - 2);
+        } else {
+          ctx.fillStyle = '#0088ff';
+          ctx.shadowColor = '#0088ff';
+          ctx.shadowBlur = 6;
+          ctx.fillRect(seg.x * GRID + 2, seg.y * GRID + 2, GRID - 4, GRID - 4);
+        }
+        ctx.restore();
+      });
+    }
+
+    function gameLoop(time) {
+      if (gameState === 'PLAYING') {
+        if (time - lastTick > speed) {
+          update();
+          lastTick = time;
+        }
+      }
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
+
+    document.getElementById('btnPlay').onclick = () => {
+      resetGame();
+      gameState = 'PLAYING';
+      document.getElementById('startScreen').classList.add('hidden');
+    };
+    document.getElementById('btnRestart').onclick = () => {
+      resetGame();
+      gameState = 'PLAYING';
+      document.getElementById('gameOverScreen').classList.add('hidden');
+    };
+    document.getElementById('btnBackMenu').onclick = () => {
+      document.getElementById('gameOverScreen').classList.add('hidden');
+      document.getElementById('startScreen').classList.remove('hidden');
+      gameState = 'START';
+    };
+
+    const goFlappy = () => { window.location.href = 'index.html'; };
+    document.getElementById('btnGoFlappy').onclick = goFlappy;
+    document.getElementById('btnBackFlappy').onclick = goFlappy;
+
+    document.getElementById('btnOpenWeb3').onclick = () => document.getElementById('web3Screen').classList.remove('hidden');
+    document.getElementById('btnCloseWeb3').onclick = () => document.getElementById('web3Screen').classList.add('hidden');
+    document.getElementById('btnCopyWallet').onclick = () => {
+      navigator.clipboard.writeText('0x03533D3c88EF9a21FccEB5e98373d17fd07bE298');
+      alert('Đã sao chép địa chỉ ví: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298');
+    };
+
+    document.getElementById('btnSound').onclick = () => {
+      sound.muted = !sound.muted;
+      document.getElementById('btnSound').innerText = sound.muted ? '🔇' : '🔊';
+    };
+  </script>
+</body>
+</html>
