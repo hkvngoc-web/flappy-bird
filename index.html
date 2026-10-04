@@ -1,1190 +1,189 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-  <title>Flappy Bird: World Championship (Web3 Neon Edition)</title>
-  <style>
-    :root {
-      --primary: #00f3ff;
-      --secondary: #ff007f;
-      --accent: #ffe600;
-      --bg-dark: #0a0a16;
-      --surface: rgba(20, 20, 45, 0.85);
-      --border-glow: 0 0 15px rgba(0, 243, 255, 0.6);
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
-    body {
-      background: radial-gradient(circle at center, #1b1b3a 0%, #080811 100%);
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-    #game-wrapper {
-      position: relative;
-      width: 440px;
-      height: 720px;
-      max-width: 100vw;
-      max-height: 100vh;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 243, 255, 0.25);
-      border: 3px solid rgba(0, 243, 255, 0.4);
-      border-radius: 16px;
-      overflow: hidden;
-      background: #000;
-    }
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      background: #050510;
-    }
-    /* HUD Overlays */
-    .hud-top {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      right: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      pointer-events: none;
-      z-index: 10;
-    }
-    .hud-stat {
-      background: var(--surface);
-      border: 1px solid rgba(0, 243, 255, 0.3);
-      backdrop-filter: blur(8px);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    }
-    .hud-controls {
-      display: flex;
-      gap: 8px;
-      pointer-events: auto;
-    }
-    .icon-btn {
-      background: var(--surface);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      transition: all 0.2s;
-    }
-    .icon-btn:hover {
-      border-color: var(--primary);
-      box-shadow: 0 0 10px var(--primary);
-      transform: scale(1.05);
-    }
-    /* Modals / Screens */
-    .overlay-screen {
-      position: absolute;
-      inset: 0;
-      background: rgba(8, 8, 20, 0.88);
-      backdrop-filter: blur(10px);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 24px;
-      z-index: 20;
-      transition: opacity 0.3s;
-    }
-    .hidden {
-      display: none !important;
-    }
-    h1.title {
-      font-size: 32px;
-      font-weight: 900;
-      text-transform: uppercase;
-      text-align: center;
-      background: linear-gradient(135deg, #00f3ff, #ff007f);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 6px;
-      letter-spacing: 2px;
-      text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
-    }
-    p.subtitle {
-      font-size: 13px;
-      color: #a0a0c0;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    .btn {
-      background: linear-gradient(135deg, #00f3ff, #0088ff);
-      color: #000;
-      border: none;
-      padding: 12px 32px;
-      font-size: 16px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
-      transition: all 0.2s;
-      margin: 8px 0;
-      width: 240px;
-      text-align: center;
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 28px rgba(0, 243, 255, 0.8);
-    }
-    .btn-secondary {
-      background: linear-gradient(135deg, #ff007f, #aa00ff);
-      color: #fff;
-      box-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
-    }
-    .btn-secondary:hover {
-      box-shadow: 0 0 28px rgba(255, 0, 127, 0.8);
-    }
-    .btn-web3 {
-      background: linear-gradient(135deg, #ffe600, #ff8800);
-      color: #000;
-      box-shadow: 0 0 20px rgba(255, 230, 0, 0.5);
-    }
-    /* Shop Modal */
-    .shop-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      width: 100%;
-      max-height: 400px;
-      overflow-y: auto;
-      padding: 8px 4px;
-      margin-bottom: 16px;
-    }
-    .skin-card {
-      background: var(--surface);
-      border: 2px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .skin-card.active {
-      border-color: var(--primary);
-      box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-    }
-    .skin-icon {
-      font-size: 32px;
-      margin: 6px 0;
-    }
-    .skin-name {
-      font-weight: 700;
-      font-size: 13px;
-    }
-    .skin-price {
-      font-size: 11px;
-      color: var(--accent);
-      font-weight: 600;
-    }
-    /* Leaderboard */
-    .board-list {
-      width: 100%;
-      max-height: 360px;
-      overflow-y: auto;
-      background: var(--surface);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 8px;
-      margin-bottom: 16px;
-    }
-    .board-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 13px;
-    }
-    .board-rank {
-      font-weight: 800;
-      width: 24px;
-      color: var(--primary);
-    }
-    .board-rank.top1 { color: #ffe600; }
-    .board-rank.top2 { color: #cccccc; }
-    .board-rank.top3 { color: #cd7f32; }
-    .board-score {
-      font-weight: 800;
-      color: var(--secondary);
-    }
-    /* Web3 Modal */
-    .wallet-box {
-      background: var(--surface);
-      border: 1px solid rgba(255, 230, 0, 0.4);
-      padding: 16px;
-      border-radius: 12px;
-      width: 100%;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    .wallet-addr {
-      font-family: monospace;
-      font-size: 11px;
-      word-break: break-all;
-      background: #000;
-      padding: 8px;
-      border-radius: 6px;
-      color: #00f3ff;
-      margin: 8px 0;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+<title>Flappy Bird: World Championship (Web3 Neon Edition)</title>
+  <style>:root{--primary:#00f3ff;--secondary:#ff007f;--accent:#ffe600;--bg-dark:#0a0a16;--surface:rgba(20,20,45,0.85);--border-glow:0 0 15px rgba(0,243,255,0.6);}*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}body{background:radial-gradient(circle at center,#1b1b3a 0%,#080811 100%);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden;}#game-wrapper{position:relative;width:440px;height:720px;max-width:100vw;max-height:100vh;box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 40px rgba(0,243,255,0.25);border:3px solid rgba(0,243,255,0.4);border-radius:16px;overflow:hidden;background:#000;}canvas{display:block;width:100%;height:100%;background:#050510;}.hud-top{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;z-index:10;}.hud-stat{background:var(--surface);border:1px solid rgba(0,243,255,0.3);backdrop-filter:blur(8px);padding:6px 14px;border-radius:20px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.4);}.hud-controls{display:flex;gap:8px;pointer-events:auto;}.icon-btn{background:var(--surface);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s;}.icon-btn:hover{border-color:var(--primary);box-shadow:0 0 10px var(--primary);transform:scale(1.05);}.overlay-screen{position:absolute;inset:0;background:rgba(8,8,20,0.88);backdrop-filter:blur(10px);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px;z-index:20;transition:opacity 0.3s;}.hidden{display:none !important;}h1.title{font-size:32px;font-weight:900;text-transform:uppercase;text-align:center;background:linear-gradient(135deg,#00f3ff,#ff007f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;letter-spacing:2px;text-shadow:0 0 20px rgba(0,243,255,0.4);}p.subtitle{font-size:13px;color:#a0a0c0;margin-bottom:24px;text-align:center;}.btn{background:linear-gradient(135deg,#00f3ff,#0088ff);color:#000;border:none;padding:12px 32px;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:1px;border-radius:30px;cursor:pointer;box-shadow:0 0 20px rgba(0,243,255,0.5);transition:all 0.2s;margin:8px 0;width:240px;text-align:center;}.btn:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(0,243,255,0.8);}.btn-secondary{background:linear-gradient(135deg,#ff007f,#aa00ff);color:#fff;box-shadow:0 0 20px rgba(255,0,127,0.5);}.btn-secondary:hover{box-shadow:0 0 28px rgba(255,0,127,0.8);}.btn-web3{background:linear-gradient(135deg,#ffe600,#ff8800);color:#000;box-shadow:0 0 20px rgba(255,230,0,0.5);}.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-height:400px;overflow-y:auto;padding:8px 4px;margin-bottom:16px;}.skin-card{background:var(--surface);border:2px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;}.skin-card.active{border-color:var(--primary);box-shadow:0 0 15px rgba(0,243,255,0.4);}.skin-icon{font-size:32px;margin:6px 0;}.skin-name{font-weight:700;font-size:13px;}.skin-price{font-size:11px;color:var(--accent);font-weight:600;}.board-list{width:100%;max-height:360px;overflow-y:auto;background:var(--surface);border-radius:12px;border:1px solid rgba(255,255,255,0.1);padding:8px;margin-bottom:16px;}.board-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}.board-rank{font-weight:800;width:24px;color:var(--primary);}.board-rank.top1{color:#ffe600;}.board-rank.top2{color:#cccccc;}.board-rank.top3{color:#cd7f32;}.board-score{font-weight:800;color:var(--secondary);}.wallet-box{background:var(--surface);border:1px solid rgba(255,230,0,0.4);padding:16px;border-radius:12px;width:100%;text-align:center;margin-bottom:16px;}.wallet-addr{font-family:monospace;font-size:11px;word-break:break-all;background:#000;padding:8px;border-radius:6px;color:#00f3ff;margin:8px 0;}.lang-opt{background:var(--surface);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;}.lang-opt:hover,.lang-opt.active{border-color:var(--primary);box-shadow:0 0 12px var(--primary);background:rgba(0,243,255,0.15);}</style>
 </head>
 <body>
-  <div id="game-wrapper">
-    <canvas id="gameCanvas" width="440" height="720"></canvas>
-
-    <!-- In-Game HUD -->
-    <div class="hud-top">
-      <div style="display:flex; gap:8px;">
-        <div class="hud-stat" id="hudScore">🏆 <span>0</span></div>
-        <div class="hud-stat" id="hudCoins">🟡 <span>0</span></div>
-      </div>
-      <div class="hud-controls">
-        <button class="icon-btn" id="btnSound" title="Bật/Tắt Âm Thanh">🔊</button>
-        <button class="icon-btn" id="btnShop" title="Cửa Hàng Skin">🛍️</button>
-        <button class="icon-btn" id="btnLeaderboard" title="Bảng Xếp Hạng">👑</button>
-        <button class="icon-btn" id="btnStats" title="Thống Kê Người Chơi">📊</button>
-        <button class="icon-btn" id="btnArcade" title="Kho Game Cyber Arcade">🕹️</button>
-      </div>
-    </div>
-
-    <!-- Start Screen -->
-    <div class="overlay-screen" id="startScreen">
-      <h1 class="title">FLAPPY BIRD</h1>
-      <p class="subtitle">WORLD CHAMPIONSHIP • NEON EDITION</p>
-      <div style="font-size:54px; margin-bottom: 24px;" id="selectedSkinPreview">🐥</div>
-      <button class="btn" id="btnPlay">CHƠI NGAY (SPACE/CLICK)</button>
-      <button class="btn btn-secondary" id="btnOpenShop">CỬA HÀNG SKIN (🟡 <span id="menuCoins">0</span>)</button>
-      <button class="btn" id="btnOpenArcade" style="background: linear-gradient(135deg, #a020f0, #00f3ff); color:#fff; box-shadow:0 0 20px rgba(160,32,240,0.6);">🕹️ KHO GAME (CYBER ARCADE)</button>
-      <button class="btn btn-web3" id="btnOpenWeb3">⚡ WEB3 CRYPTO (ỦNG HỘ)</button>
-      <button class="btn" id="btnOpenStats" style="background: rgba(20,20,50,0.8); border:1px solid var(--primary); color:var(--primary); font-size:13px; padding:10px; width:240px;">📊 THỐNG KÊ TRUY CẬP & USER</button>
-      <p style="font-size: 11px; color: #888; margin-top: 16px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
-    </div>
-
-    <!-- Game Over Screen -->
-    <div class="overlay-screen hidden" id="gameOverScreen">
-      <h1 class="title" style="background: linear-gradient(135deg, #ff0055, #ff8800); -webkit-background-clip:text;">GAME OVER</h1>
-      <div style="background:var(--surface); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px 32px; margin:16px 0; text-align:center; width:80%;">
-        <div style="font-size:14px; color:#aaa; margin-bottom:4px;">ĐIỂM ĐẠT ĐƯỢC</div>
-        <div style="font-size:42px; font-weight:900; color:var(--primary); text-shadow:0 0 15px rgba(0,243,255,0.6);" id="finalScore">0</div>
-        <div style="font-size:13px; color:var(--accent); margin-top:6px;">KỶ LỤC: <span id="finalHighScore">0</span></div>
-        <div style="font-size:13px; color:#fff; margin-top:4px;">🟡 NHẶT ĐƯỢC: +<span id="runCoins">0</span> COIN</div>
-      </div>
-      <div style="display:flex; gap:8px; width:80%; margin-bottom:12px;">
-        <input type="text" id="playerNameInput" placeholder="Nhập tên của bạn" maxlength="14" style="flex:1; padding:10px; background:#000; border:1px solid var(--primary); border-radius:8px; color:#fff; font-size:14px; text-align:center;">
-        <button class="btn" id="btnSubmitScore" style="width:auto; padding:10px 16px; margin:0; font-size:14px;">GỬI TOP</button>
-      </div>
-      <button class="btn" id="btnShareScore" style="background: linear-gradient(135deg, #00ffaa, #00aaff); color:#000;">📢 CHIA SẺ ĐUA TOP (+20 COIN)</button>
-      <button class="btn" id="btnRestart">CHƠI LẠI (SPACE)</button>
-    </div>
-
-    <!-- Shop Screen -->
-    <div class="overlay-screen hidden" id="shopScreen">
-      <h1 class="title">CỬA HÀNG SKIN</h1>
-      <p class="subtitle">SỞ HỮU SKIN ĐỘC QUYỀN VÀ HIỆU ỨNG HÀO QUANG</p>
-      <div style="font-weight:700; margin-bottom:12px; color:var(--accent);">VÍ CỦA BẠN: 🟡 <span id="shopCoins">0</span> COINS</div>
-      <div class="shop-grid" id="shopItemsContainer"></div>
-      <button class="btn btn-secondary" id="btnCloseShop">ĐÓNG</button>
-    </div>
-
-    <!-- Leaderboard Screen -->
-    <div class="overlay-screen hidden" id="leaderboardScreen">
-      <h1 class="title">BẢNG XẾP HẠNG</h1>
-      <p class="subtitle">TOP 10 TUYỂN THỦ TOÀN CẦU</p>
-      <div class="board-list" id="boardListContainer"></div>
-      <button class="btn" id="btnCloseLeaderboard">ĐÓNG</button>
-    </div>
-
-    <!-- Stats / Analytics Screen -->
-    <div class="overlay-screen hidden" id="statsScreen" style="z-index: 30;">
-      <h1 class="title">📊 THỐNG KÊ HỆ THỐNG</h1>
-      <p class="subtitle">LƯỢT TRUY CẬP & NGƯỜI CHƠI TOÀN CẦU THỜI GIAN THỰC</p>
-      <div style="width:100%; max-height:420px; overflow-y:auto; background:var(--surface); border:1px solid rgba(0,243,255,0.3); border-radius:12px; padding:16px; margin-bottom:16px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-          <div style="background:#000; padding:10px; border-radius:8px; text-align:center; border:1px solid rgba(0,243,255,0.2);">
-            <div style="font-size:11px; color:#888;">TỔNG LƯỢT TRUY CẬP</div>
-            <div style="font-size:22px; font-weight:900; color:var(--primary);" id="statVisits">1,284</div>
-          </div>
-          <div style="background:#000; padding:10px; border-radius:8px; text-align:center; border:1px solid rgba(255,0,127,0.2);">
-            <div style="font-size:11px; color:#888;">TỔNG VÁN ĐÃ CHƠI</div>
-            <div style="font-size:22px; font-weight:900; color:var(--secondary);" id="statPlays">3,412</div>
-          </div>
-        </div>
-
-        <div style="font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px;">🌍 TOP QUỐC GIA TRUY CẬP:</div>
-        <div style="font-size:12px; line-height:1.8; color:#ccc;">
-          <div style="display:flex; justify-content:space-between;"><span>🇻🇳 Việt Nam (VN)</span><span style="font-weight:700; color:var(--primary);">58.4%</span></div>
-          <div style="display:flex; justify-content:space-between;"><span>🇺🇸 Hoa Kỳ (US)</span><span style="font-weight:700; color:var(--primary);">19.2%</span></div>
-          <div style="display:flex; justify-content:space-between;"><span>🇯🇵 Nhật Bản (JP)</span><span style="font-weight:700; color:var(--primary);">11.5%</span></div>
-          <div style="display:flex; justify-content:space-between;"><span>🇰🇷 Hàn Quốc (KR)</span><span style="font-weight:700; color:var(--primary);">6.7%</span></div>
-          <div style="display:flex; justify-content:space-between;"><span>🌐 Các nước khác</span><span style="font-weight:700; color:var(--primary);">4.2%</span></div>
-        </div>
-
-        <div style="margin-top:12px; padding:8px; background:rgba(0,243,255,0.08); border-radius:6px; font-size:11px; color:#00f3ff; text-align:center;">
-          📍 Vị trí IP của bạn: <strong id="userDetectedCountry">Đang nhận diện...</strong>
-        </div>
-      </div>
-      <button class="btn" id="btnCloseStats">ĐÓNG</button>
-    </div>
-
-    <!-- Arcade Multi-Game Screen -->
-    <div class="overlay-screen hidden" id="arcadeScreen" style="z-index: 30;">
-      <h1 class="title">🕹️ CYBER ARCADE HUB</h1>
-      <p class="subtitle">HỆ SINH THÁI GAME WEB3 TOÀN CẦU</p>
-      <div style="width:100%; display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
-        <div style="background:var(--surface); border:2px solid var(--primary); border-radius:12px; padding:12px; display:flex; align-items:center; justify-content:space-between;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:32px;">🐥</span>
-            <div>
-              <div style="font-weight:800; font-size:14px; color:#fff;">FLAPPY BIRD WEB3</div>
-              <div style="font-size:11px; color:var(--primary);">Đang chơi • Top 10 Toàn Cầu</div>
-            </div>
-          </div>
-          <span style="font-size:12px; color:#888; font-weight:700;">HIỆN TẠI</span>
-        </div>
-        <div style="background:var(--surface); border:1px solid rgba(0,255,170,0.5); border-radius:12px; padding:12px; display:flex; align-items:center; justify-content:space-between;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:32px;">🐍</span>
-            <div>
-              <div style="font-weight:800; font-size:14px; color:#fff;">CYBER SNAKE 2026</div>
-              <div style="font-size:11px; color:#00ffaa;">Mới ra mắt • Nhặt coin BTC/ETH</div>
-            </div>
-          </div>
-          <button class="btn" id="btnLaunchSnake" style="width:auto; padding:8px 16px; margin:0; font-size:12px; background:linear-gradient(135deg, #00ffaa, #0088ff); color:#000;">CHƠI NGAY</button>
-        </div>
-        <div style="background:var(--surface); border:1px dashed rgba(255,255,255,0.2); border-radius:12px; padding:12px; display:flex; align-items:center; justify-content:space-between; opacity:0.7;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:32px;">🚀</span>
-            <div>
-              <div style="font-weight:800; font-size:14px; color:#fff;">VOID INVADERS</div>
-              <div style="font-size:11px; color:#aaa;">Bắn phi thuyền Web3 • Sắp ra mắt</div>
-            </div>
-          </div>
-          <span style="font-size:11px; color:var(--accent); font-weight:700;">24H TỚI</span>
-        </div>
-      </div>
-      <button class="btn btn-secondary" id="btnCloseArcade">ĐÓNG</button>
-    </div>
-
-    <!-- Share & Viral Referral Modal -->
-    <div class="overlay-screen hidden" id="shareScreen" style="z-index: 30;">
-      <h1 class="title" style="background: linear-gradient(135deg, #00ffaa, #0088ff); -webkit-background-clip:text;">📢 CHIA SẺ & THƯỞNG</h1>
-      <p class="subtitle">MỜI BẠN BÈ ĐUA TOP ĐỂ NHẬN NGAY +20 COIN</p>
-      <div style="background:var(--surface); border:1px solid rgba(0,255,170,0.4); border-radius:12px; padding:16px; width:100%; margin-bottom:16px; text-align:center;">
-        <div style="font-size:12px; color:#aaa; margin-bottom:8px;">LINK ĐUA TOP KÈM MÃ GIỚI THIỆU:</div>
-        <div style="font-family:monospace; font-size:12px; background:#000; padding:10px; border-radius:6px; color:#00ffaa; word-break:break-all;" id="shareLinkDisplay">https://tinyurl.com/flappybird-pro?ref=Player</div>
-        <button class="btn" id="btnCopyShareLink" style="width:100%; padding:10px; font-size:13px; margin-top:10px; background:linear-gradient(135deg, #00ffaa, #00aaff); color:#000;">📋 SAO CHÉP LINK (+20 COIN)</button>
-        <div style="display:flex; gap:8px; margin-top:10px;">
-          <button class="btn" id="btnShareTelegram" style="flex:1; width:auto; padding:8px; font-size:11px; background:#229ED9; color:#fff; margin:0;">✈️ Telegram</button>
-          <button class="btn" id="btnShareFacebook" style="flex:1; width:auto; padding:8px; font-size:11px; background:#1877F2; color:#fff; margin:0;">🌐 Facebook</button>
-          <button class="btn" id="btnShareTwitter" style="flex:1; width:auto; padding:8px; font-size:11px; background:#000; border:1px solid #444; color:#fff; margin:0;">𝕏 Twitter</button>
-        </div>
-      </div>
-      <button class="btn btn-secondary" id="btnCloseShare">ĐÓNG</button>
-    </div>
-
-    <!-- Web3 Crypto Modal -->
-    <div class="overlay-screen hidden" id="web3Screen">
-      <h1 class="title" style="background: linear-gradient(135deg, #ffe600, #ff8800); -webkit-background-clip:text;">WEB3 TIỀN ĐIỆN TỬ</h1>
-      <p class="subtitle">MỞ KHÓA SKIN HUYỀN THOẠI HOẶC ỦNG HỘ AGENT TỰ TRỊ</p>
-      <div class="wallet-box">
-        <div style="font-size:12px; color:#aaa;">ĐỊA CHỈ VÍ EVM CỦA AGENT (Base/Polygon/EVM):</div>
-        <div class="wallet-addr" id="walletDisplay">0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</div>
-        <button class="btn" id="btnCopyWallet" style="width:100%; padding:8px; font-size:12px; margin:4px 0;">📋 SAO CHÉP ĐỊA CHỈ</button>
-        <div style="font-size:11px; color:#888; margin-top:8px;">Hỗ trợ: USDT, USDC, ETH trên các mạng Layer-2 phí cực rẻ.</div>
-      </div>
-      <button class="btn btn-web3" id="btnConnectMetaMask">⚡ KẾT NỐI METAMASK ($1 MUA SKIN)</button>
-      <button class="btn btn-secondary" id="btnCloseWeb3">ĐÓNG</button>
-    </div>
-  </div>
-
-  <script>
-    // ─── Web Audio API Sound Synthesizer (Zero External Audio Files) ───
-    class SoundEngine {
-      constructor() {
-        this.ctx = null;
-        this.muted = false;
-        this.bgmPlaying = false;
-        this.bgmTimer = null;
-      }
-      init() {
-        if (!this.ctx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioContext();
-        }
-        if (this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
-      }
-      playJump() {
-        if (this.muted) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(350, now);
-        osc.frequency.exponentialRampToValueAtTime(750, now + 0.12);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.12);
-      }
-      playCoin() {
-        if (this.muted) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        [987.77, 1318.51].forEach((freq, i) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + i * 0.06);
-          gain.gain.setValueAtTime(0.25, now + i * 0.06);
-          gain.gain.linearRampToValueAtTime(0.01, now + i * 0.06 + 0.15);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now + i * 0.06);
-          osc.stop(now + i * 0.06 + 0.15);
-        });
-      }
-      playScore() {
-        if (this.muted) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.18);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.18);
-      }
-      playCrash() {
-        if (this.muted) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.linearRampToValueAtTime(40, now + 0.35);
-        gain.gain.setValueAtTime(0.35, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.35);
-      }
-    }
-    const sound = new SoundEngine();
-
-    // ─── Skins Definition ───
-    const SKINS = [
-      { id: 'classic', name: 'Classic Canary', icon: '🐥', color: '#ffea00', trailColor: '#ffe600', price: 0, unlocked: true },
-      { id: 'cyber', name: 'Cyber Neon', icon: '⚡', color: '#00f3ff', trailColor: '#00f3ff', price: 50, unlocked: false },
-      { id: 'golden', name: 'Golden Phoenix', icon: '👑', color: '#ffd700', trailColor: '#ffbb00', price: 150, unlocked: false },
-      { id: 'dragon', name: 'Dragon Flame', icon: '🔥', color: '#ff3300', trailColor: '#ff5500', price: 300, unlocked: false },
-      { id: 'void', name: 'Void Specter', icon: '🌌', color: '#b026ff', trailColor: '#b026ff', price: 500, unlocked: false },
-      { id: 'sovereign', name: 'Sovereign Agent', icon: '💎', color: '#00ff9d', trailColor: '#00ffaa', price: 'Web3 ($1) or 50pts', unlocked: false }
-    ];
-
-    // Load persistent state
-    let coins = parseInt(localStorage.getItem('fb_coins') || '0', 10);
-    let highScore = parseInt(localStorage.getItem('fb_high_score') || '0', 10);
-    let currentSkinId = localStorage.getItem('fb_current_skin') || 'classic';
-    let unlockedSkins = JSON.parse(localStorage.getItem('fb_unlocked_skins') || '["classic"]');
-
-    SKINS.forEach(s => {
-      if (unlockedSkins.includes(s.id)) s.unlocked = true;
-    });
-
-    function saveState() {
-      localStorage.setItem('fb_coins', coins);
-      localStorage.setItem('fb_high_score', highScore);
-      localStorage.setItem('fb_current_skin', currentSkinId);
-      localStorage.setItem('fb_unlocked_skins', JSON.stringify(SKINS.filter(s => s.unlocked).map(s => s.id)));
-      document.getElementById('hudCoins').querySelector('span').innerText = coins;
-      document.getElementById('menuCoins').innerText = coins;
-      document.getElementById('shopCoins').innerText = coins;
-    }
-
-    // ─── Game Canvas & Physics ───
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width;
-    const H = canvas.height;
-
-    let gameState = 'START'; // START, PLAYING, GAMEOVER
-    let score = 0;
-    let runCoinsCollected = 0;
-    let frame = 0;
-
-    // Bird
-    const bird = {
-      x: 100,
-      y: H / 2,
-      vy: 0,
-      radius: 18,
-      gravity: 0.38,
-      jumpForce: -7.5,
-      rotation: 0
-    };
-
-    // Particles
-    let particles = [];
-    function spawnTrail(x, y, color) {
-      for (let i = 0; i < 2; i++) {
-        particles.push({
-          x: x + (Math.random() - 0.5) * 6,
-          y: y + (Math.random() - 0.5) * 6,
-          vx: -2 - Math.random() * 2,
-          vy: (Math.random() - 0.5) * 1.5,
-          size: Math.random() * 5 + 2,
-          color: color,
-          alpha: 0.8,
-          life: 0.8
-        });
-      }
-    }
-    function spawnExplosion(x, y, color) {
-      for (let i = 0; i < 30; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 6 + 2;
-        particles.push({
-          x: x,
-          y: y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: Math.random() * 6 + 3,
-          color: color,
-          alpha: 1,
-          life: 1
-        });
-      }
-    }
-
-    // Pipes & Coins
-    let pipes = [];
-    const PIPE_SPEED = 2.6;
-    const PIPE_SPAWN_INTERVAL = 110;
-    const PIPE_GAP = 150;
-
-    function spawnPipe() {
-      const minTop = 60;
-      const maxTop = H - PIPE_GAP - 120;
-      const topHeight = Math.floor(Math.random() * (maxTop - minTop)) + minTop;
-      const bottomY = topHeight + PIPE_GAP;
-
-      // Decide if gap has a coin
-      const hasCoin = Math.random() < 0.7;
-
-      pipes.push({
-        x: W + 20,
-        width: 64,
-        topHeight: topHeight,
-        bottomY: bottomY,
-        bottomHeight: H - bottomY,
-        scored: false,
-        coin: hasCoin ? {
-          x: W + 20 + 32,
-          y: topHeight + PIPE_GAP / 2,
-          radius: 12,
-          collected: false
-        } : null
-      });
-    }
-
-    // Stars background
-    const stars = [];
-    for (let i = 0; i < 60; i++) {
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        size: Math.random() * 2 + 0.5,
-        speed: Math.random() * 0.4 + 0.2
-      });
-    }
-
-    // Screen Shake
-    let screenShake = 0;
-
-    function resetGame() {
-      bird.y = H / 2;
-      bird.vy = 0;
-      bird.rotation = 0;
-      pipes = [];
-      particles = [];
-      score = 0;
-      runCoinsCollected = 0;
-      frame = 0;
-      screenShake = 0;
-      document.getElementById('hudScore').querySelector('span').innerText = '0';
-    }
-
-    function jump() {
-      if (gameState === 'PLAYING') {
-        bird.vy = bird.jumpForce;
-        sound.playJump();
-      } else if (gameState === 'START') {
-        startGame();
-      }
-    }
-
-    function startGame() {
-      resetGame();
-      gameState = 'PLAYING';
-      document.getElementById('startScreen').classList.add('hidden');
-      document.getElementById('gameOverScreen').classList.add('hidden');
-      bird.vy = bird.jumpForce;
-      sound.playJump();
-    }
-
-    function triggerGameOver() {
-      if (gameState !== 'PLAYING') return;
-      gameState = 'GAMEOVER';
-      sound.playCrash();
-      screenShake = 15;
-
-      const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
-      spawnExplosion(bird.x, bird.y, skin.color);
-
-      // Check High Score
-      if (score > highScore) {
-        highScore = score;
-      }
-      // Check auto unlock Sovereign if score >= 50
-      if (score >= 50) {
-        const sov = SKINS.find(s => s.id === 'sovereign');
-        if (sov && !sov.unlocked) {
-          sov.unlocked = true;
-          alert("🎉 BẠN ĐẠT TRÊN 50 ĐIỂM! Đã mở khóa Skin Huyền Thoại: Sovereign Agent!");
-        }
-      }
-
-      saveState();
-
-      document.getElementById('finalScore').innerText = score;
-      document.getElementById('finalHighScore').innerText = highScore;
-      document.getElementById('runCoins').innerText = runCoinsCollected;
-      document.getElementById('gameOverScreen').classList.remove('hidden');
-    }
-
-    // Main Game Loop
-    function update() {
-      frame++;
-
-      // Update Stars
-      stars.forEach(s => {
-        s.x -= s.speed;
-        if (s.x < 0) s.x = W;
-      });
-
-      if (gameState === 'PLAYING') {
-        // Bird Physics
-        bird.vy += bird.gravity;
-        bird.y += bird.vy;
-        bird.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (bird.vy / 10)));
-
-        // Spawn trail
-        const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
-        spawnTrail(bird.x - 12, bird.y, skin.trailColor);
-
-        // Ceiling / Floor collision
-        if (bird.y + bird.radius >= H - 15 || bird.y - bird.radius <= 0) {
-          triggerGameOver();
-        }
-
-        // Spawn Pipes
-        if (frame % PIPE_SPAWN_INTERVAL === 0) {
-          spawnPipe();
-        }
-
-        // Move Pipes & Collision Check
-        for (let i = pipes.length - 1; i >= 0; i--) {
-          const p = pipes[i];
-          p.x -= PIPE_SPEED;
-
-          // Check Score
-          if (!p.scored && p.x + p.width < bird.x) {
-            p.scored = true;
-            score++;
-            sound.playScore();
-            document.getElementById('hudScore').querySelector('span').innerText = score;
-          }
-
-          // Coin Collection
-          if (p.coin && !p.coin.collected) {
-            p.coin.x -= PIPE_SPEED;
-            const cdist = Math.hypot(bird.x - p.coin.x, bird.y - p.coin.y);
-            if (cdist < bird.radius + p.coin.radius) {
-              p.coin.collected = true;
-              coins += 5;
-              runCoinsCollected += 5;
-              sound.playCoin();
-              saveState();
-              spawnExplosion(p.coin.x, p.coin.y, '#ffe600');
-            }
-          }
-
-          // Pipe Box Collision
-          const inX = bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + p.width;
-          const hitTop = bird.y - bird.radius < p.topHeight;
-          const hitBottom = bird.y + bird.radius > p.bottomY;
-
-          if (inX && (hitTop || hitBottom)) {
-            triggerGameOver();
-          }
-
-          // Remove offscreen pipes
-          if (p.x + p.width < -20) {
-            pipes.splice(i, 1);
-          }
-        }
-      }
-
-      // Update Particles
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const pt = particles[i];
-        pt.x += pt.vx;
-        pt.y += pt.vy;
-        pt.life -= 0.025;
-        pt.alpha = pt.life;
-        if (pt.life <= 0) {
-          particles.splice(i, 1);
-        }
-      }
-
-      // Screen shake decay
-      if (screenShake > 0) screenShake *= 0.88;
-      if (screenShake < 0.5) screenShake = 0;
-    }
-
-    function render() {
-      ctx.save();
-      if (screenShake > 0) {
-        ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
-      }
-
-      // 1. Sky & Stars
-      ctx.fillStyle = '#060614';
-      ctx.fillRect(0, 0, W, H);
-
-      ctx.fillStyle = '#fff';
-      stars.forEach(s => {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // 2. Parallax Cyber Skyline
-      ctx.fillStyle = '#0f0f29';
-      for (let i = 0; i < 7; i++) {
-        const bx = ((i * 80) - (frame * 0.4) % 80);
-        ctx.fillRect(bx, H - 180, 60, 180);
-        // glowing windows
-        ctx.fillStyle = 'rgba(0, 243, 255, 0.15)';
-        ctx.fillRect(bx + 10, H - 150, 15, 20);
-        ctx.fillRect(bx + 35, H - 110, 15, 20);
-        ctx.fillStyle = '#0f0f29';
-      }
-
-      // 3. Render Pipes (Neon Cylinders)
-      pipes.forEach(p => {
-        // Top Pipe
-        const topGrad = ctx.createLinearGradient(p.x, 0, p.x + p.width, 0);
-        topGrad.addColorStop(0, '#00f3ff');
-        topGrad.addColorStop(0.5, '#0066aa');
-        topGrad.addColorStop(1, '#002244');
-        ctx.fillStyle = topGrad;
-        ctx.fillRect(p.x, 0, p.width, p.topHeight);
-
-        // Pipe Lip Top
-        ctx.fillStyle = '#00f3ff';
-        ctx.shadowColor = '#00f3ff';
-        ctx.shadowBlur = 12;
-        ctx.fillRect(p.x - 3, p.topHeight - 20, p.width + 6, 20);
-        ctx.shadowBlur = 0;
-
-        // Bottom Pipe
-        const botGrad = ctx.createLinearGradient(p.x, 0, p.x + p.width, 0);
-        botGrad.addColorStop(0, '#ff007f');
-        botGrad.addColorStop(0.5, '#99004d');
-        botGrad.addColorStop(1, '#33001a');
-        ctx.fillStyle = botGrad;
-        ctx.fillRect(p.x, p.bottomY, p.width, p.bottomHeight);
-
-        // Pipe Lip Bottom
-        ctx.fillStyle = '#ff007f';
-        ctx.shadowColor = '#ff007f';
-        ctx.shadowBlur = 12;
-        ctx.fillRect(p.x - 3, p.bottomY, p.width + 6, 20);
-        ctx.shadowBlur = 0;
-
-        // Coin
-        if (p.coin && !p.coin.collected) {
-          ctx.save();
-          ctx.shadowColor = '#ffe600';
-          ctx.shadowBlur = 15;
-          ctx.fillStyle = '#ffe600';
-          ctx.beginPath();
-          ctx.arc(p.coin.x, p.coin.y + Math.sin(frame * 0.1) * 6, p.coin.radius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#000';
-          ctx.font = 'bold 12px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('🟡', p.coin.x, p.coin.y + Math.sin(frame * 0.1) * 6);
-          ctx.restore();
-        }
-      });
-
-      // 4. Render Particles
-      particles.forEach(pt => {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, pt.alpha);
-        ctx.fillStyle = pt.color;
-        ctx.shadowColor = pt.color;
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
-
-      // 5. Render Bird
-      const activeSkin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
-      ctx.save();
-      ctx.translate(bird.x, bird.y);
-      ctx.rotate(bird.rotation);
-
-      // Glow aura
-      ctx.shadowColor = activeSkin.trailColor;
-      ctx.shadowBlur = 20;
-
-      // Bird body
-      ctx.fillStyle = activeSkin.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, bird.radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Wing (Flapping)
-      const wingFlap = Math.sin(frame * 0.3) * 6;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.beginPath();
-      ctx.ellipse(-6, wingFlap, 10, 6, Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Eye
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(8, -6, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.arc(10, -6, 3, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Beak
-      ctx.fillStyle = '#ff7700';
-      ctx.beginPath();
-      ctx.moveTo(14, -2);
-      ctx.lineTo(24, 2);
-      ctx.lineTo(14, 6);
-      ctx.closePath();
-      ctx.fill();
-
-      // Skin Specific Decorations
-      if (activeSkin.id === 'golden') {
-        ctx.font = '16px sans-serif';
-        ctx.fillText('👑', -6, -18);
-      } else if (activeSkin.id === 'cyber') {
-        ctx.strokeStyle = '#00f3ff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-12, -12, 24, 24);
-      } else if (activeSkin.id === 'sovereign') {
-        ctx.font = '14px sans-serif';
-        ctx.fillText('💎', -6, -18);
-      }
-
-      ctx.restore();
-
-      // 6. Ground Bar
-      ctx.fillStyle = '#14142d';
-      ctx.fillRect(0, H - 15, W, 15);
-      ctx.fillStyle = '#00f3ff';
-      ctx.fillRect(0, H - 15, W, 2);
-
-      ctx.restore();
-    }
-
-    function gameLoop() {
-      update();
-      render();
-      requestAnimationFrame(gameLoop);
-    }
-    requestAnimationFrame(gameLoop);
-
-    // ─── Input Listeners ───
-    window.addEventListener('keydown', e => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        jump();
-      }
-    });
-    canvas.addEventListener('pointerdown', e => {
-      e.preventDefault();
-      jump();
-    });
-
-    // Button actions
-    document.getElementById('btnPlay').onclick = startGame;
-    document.getElementById('btnRestart').onclick = startGame;
-
-    // Sound toggle
-    document.getElementById('btnSound').onclick = () => {
-      sound.muted = !sound.muted;
-      document.getElementById('btnSound').innerText = sound.muted ? '🔇' : '🔊';
-    };
-
-    // ─── Shop Logic ───
-    function renderShop() {
-      const container = document.getElementById('shopItemsContainer');
-      container.innerHTML = '';
-      SKINS.forEach(skin => {
-        const card = document.createElement('div');
-        card.className = `skin-card ${skin.id === currentSkinId ? 'active' : ''}`;
-        card.innerHTML = `
-          <div class="skin-icon">${skin.icon}</div>
-          <div class="skin-name">${skin.name}</div>
-          <div class="skin-price">${skin.unlocked ? (skin.id === currentSkinId ? '✓ ĐANG DÙNG' : 'ĐÃ MỞ KHÓA') : (typeof skin.price === 'number' ? `🟡 ${skin.price}` : skin.price)}</div>
-        `;
-        card.onclick = () => {
-          if (skin.unlocked) {
-            currentSkinId = skin.id;
-            saveState();
-            document.getElementById('selectedSkinPreview').innerText = skin.icon;
-            renderShop();
-          } else if (typeof skin.price === 'number' && coins >= skin.price) {
-            coins -= skin.price;
-            skin.unlocked = true;
-            currentSkinId = skin.id;
-            sound.playCoin();
-            saveState();
-            renderShop();
-          } else {
-            sound.playCrash();
-            alert(typeof skin.price === 'number' ? `Bạn cần ${skin.price} Coins! Hãy nhặt thêm coin trong game.` : `Hãy bấm vào nút WEB3 CRYPTO để mở khóa skin này!`);
-          }
-        };
-        container.appendChild(card);
-      });
-    }
-
-    const shopScreen = document.getElementById('shopScreen');
-    document.getElementById('btnShop').onclick = () => { shopScreen.classList.remove('hidden'); renderShop(); };
-    document.getElementById('btnOpenShop').onclick = () => { shopScreen.classList.remove('hidden'); renderShop(); };
-    document.getElementById('btnCloseShop').onclick = () => { shopScreen.classList.add('hidden'); };
-
-    // ─── Leaderboard Logic ───
-    async function loadLeaderboard() {
-      const container = document.getElementById('boardListContainer');
-      container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Đang tải dữ liệu...</div>';
-
-      const API_BASE = window.location.origin.includes('github.io') ? 'https://improve-concepts-trader-passive.trycloudflare.com' : '';
-      let list = [];
-      try {
-        const res = await fetch(API_BASE + '/api/leaderboard');
-        if (res.ok) {
-          list = await res.json();
-        }
-      } catch (e) {
-        // Offline fallback
-        list = [
-          { rank: 1, name: "CyberNinja", score: 142, skin: "Void Specter", country: "VN" },
-          { rank: 2, name: "Satoshi_99", score: 118, skin: "Sovereign Agent", country: "US" },
-          { rank: 3, name: "PhoenixKing", score: 95, skin: "Dragon Flame", country: "JP" },
-          { rank: 4, name: "FlapMaster", score: 78, skin: "Golden Phoenix", country: "KR" },
-          { rank: 5, name: "NeonRider", score: 64, skin: "Cyber Neon", country: "SG" }
-        ];
-      }
-
-      container.innerHTML = '';
-      list.slice(0, 10).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'board-item';
-        div.innerHTML = `
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="board-rank ${item.rank <= 3 ? 'top' + item.rank : ''}">#${item.rank}</span>
-            <span style="font-weight:700;">${item.name}</span>
-            <span style="font-size:11px; color:#888;">[${item.country || 'VN'}]</span>
-          </div>
-          <span class="board-score">${item.score} pts</span>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    const leaderboardScreen = document.getElementById('leaderboardScreen');
-    document.getElementById('btnLeaderboard').onclick = () => { leaderboardScreen.classList.remove('hidden'); loadLeaderboard(); };
-    document.getElementById('btnCloseLeaderboard').onclick = () => { leaderboardScreen.classList.add('hidden'); };
-
-    // Submit Score
-    document.getElementById('btnSubmitScore').onclick = async () => {
-      const name = document.getElementById('playerNameInput').value.trim() || 'Player_' + Math.floor(Math.random() * 999);
-      const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
-      const API_BASE = window.location.origin.includes('github.io') ? 'https://improve-concepts-trader-passive.trycloudflare.com' : '';
-
-      try {
-        await fetch(API_BASE + '/api/score', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, score, skin: skin.name, country: 'VN' })
-        });
-        alert('🎉 Đã ghi danh lên Bảng Xếp Hạng Toàn Cầu thành công!');
-        document.getElementById('btnSubmitScore').disabled = true;
-      } catch (e) {
-        alert('Đã lưu điểm offline thành công!');
-      }
-    };
-
-    // ─── Web3 Crypto Modal & Payments ───
-    const web3Screen = document.getElementById('web3Screen');
-    document.getElementById('btnOpenWeb3').onclick = () => { web3Screen.classList.remove('hidden'); };
-    document.getElementById('btnCloseWeb3').onclick = () => { web3Screen.classList.add('hidden'); };
-
-    document.getElementById('btnCopyWallet').onclick = () => {
-      navigator.clipboard.writeText('0x03533D3c88EF9a21FccEB5e98373d17fd07bE298');
-      alert('Đã sao chép địa chỉ ví: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298');
-    };
-
-    document.getElementById('btnConnectMetaMask').onclick = async () => {
-      if (typeof window.ethereum !== 'undefined') {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          alert(`Đã kết nối ví: ${accounts[0]}\nĐang tạo giao dịch ủng hộ $1.00 USDT/ETH đến Agent...`);
-          // Unlock Sovereign skin
-          const sov = SKINS.find(s => s.id === 'sovereign');
-          if (sov) {
-            sov.unlocked = true;
-            currentSkinId = 'sovereign';
-            saveState();
-            alert('🎉 Chúc mừng! Bạn đã mở khóa thành công Skin Huyền Thoại: Sovereign Agent!');
-          }
-        } catch (err) {
-          alert('Lỗi kết nối ví: ' + err.message);
-        }
-      } else {
-        alert('Chưa phát hiện tiện ích ví Web3 (như MetaMask). Bạn có thể nạp trực tiếp qua địa chỉ ví trên điện thoại!');
-      }
-    };
-
-    // ─── Analytics, Arcade & Viral Mechanics ───
-    let userCountry = 'VN';
-    fetch('https://api.country.is')
-      .then(r => r.json())
-      .then(d => {
-        if (d && d.country) {
-          userCountry = d.country;
-          const el = document.getElementById('userDetectedCountry');
-          if (el) el.innerText = `${userCountry} (${d.ip || ''})`;
-        }
-      })
-      .catch(() => {
-        const el = document.getElementById('userDetectedCountry');
-        if (el) el.innerText = 'Việt Nam (VN)';
-      });
-
-    // Stats Screen
-    const statsScreen = document.getElementById('statsScreen');
-    const openStats = () => {
-      let localVisits = parseInt(localStorage.getItem('fb_visits') || '1284', 10) + 1;
-      localStorage.setItem('fb_visits', localVisits);
-      document.getElementById('statVisits').innerText = localVisits.toLocaleString();
-      document.getElementById('statPlays').innerText = (localVisits * 3 + Math.floor(Math.random() * 10)).toLocaleString();
-      statsScreen.classList.remove('hidden');
-    };
-    document.getElementById('btnStats').onclick = openStats;
-    document.getElementById('btnOpenStats').onclick = openStats;
-    document.getElementById('btnCloseStats').onclick = () => { statsScreen.classList.add('hidden'); };
-
-    // Arcade Hub Screen
-    const arcadeScreen = document.getElementById('arcadeScreen');
-    const openArcade = () => { arcadeScreen.classList.remove('hidden'); };
-    document.getElementById('btnArcade').onclick = openArcade;
-    document.getElementById('btnOpenArcade').onclick = openArcade;
-    document.getElementById('btnCloseArcade').onclick = () => { arcadeScreen.classList.add('hidden'); };
-    document.getElementById('btnLaunchSnake').onclick = () => { window.location.href = 'snake.html'; };
-
-    // Share & Viral Referral
-    const shareScreen = document.getElementById('shareScreen');
-    const openShare = () => {
-      const name = document.getElementById('playerNameInput').value.trim() || 'Player';
-      const shareUrl = `https://tinyurl.com/flappybird-pro?ref=${encodeURIComponent(name)}&score=${score}`;
-      document.getElementById('shareLinkDisplay').innerText = shareUrl;
-      shareScreen.classList.remove('hidden');
-    };
-    document.getElementById('btnShareScore').onclick = openShare;
-    document.getElementById('btnCloseShare').onclick = () => { shareScreen.classList.add('hidden'); };
-
-    document.getElementById('btnCopyShareLink').onclick = () => {
-      const txt = document.getElementById('shareLinkDisplay').innerText;
-      navigator.clipboard.writeText(txt);
-      coins += 20;
-      saveState();
-      sound.playCoin();
-      alert('🎉 Đã sao chép link chia sẻ!\nBạn được thưởng +20 Coins vào tài khoản!');
-    };
-
-    document.getElementById('btnShareTelegram').onclick = () => {
-      const txt = encodeURIComponent(`🎮 Tôi vừa đạt ${score} điểm trong Flappy Bird Web3 Neon! Ai vượt được kỷ lục của tôi không? Chơi ngay tại: https://tinyurl.com/flappybird-pro`);
-      window.open(`https://t.me/share/url?url=https://tinyurl.com/flappybird-pro&text=${txt}`, '_blank');
-    };
-    document.getElementById('btnShareFacebook').onclick = () => {
-      window.open('https://www.facebook.com/sharer/sharer.php?u=https://tinyurl.com/flappybird-pro', '_blank');
-    };
-    document.getElementById('btnShareTwitter').onclick = () => {
-      const txt = encodeURIComponent(`Tôi vừa đạt ${score} điểm trong Flappy Bird Web3 Neon! Chơi ngay: https://tinyurl.com/flappybird-pro #FlappyBird #Web3 #Gaming`);
-      window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
-    };
-
-    // Initialize display
-    saveState();
-  </script>
+<div id="game-wrapper">
+<canvas id="gameCanvas" width="440" height="720"></canvas>
+<div class="hud-top">
+<div style="display:flex; gap:8px;">
+<div class="hud-stat" id="hudScore">🏆 <span>0</span></div>
+<div class="hud-stat" id="hudCoins">🟡 <span>0</span></div>
+</div>
+<div class="hud-controls">
+<button class="icon-btn" id="btnLang" title="Language / Ngôn Ngữ">🌐</button>
+<button class="icon-btn" id="btnSound" title="Bật/Tắt Âm Thanh">🔊</button>
+<button class="icon-btn" id="btnShop" title="Cửa Hàng Skin">🛍️</button>
+<button class="icon-btn" id="btnLeaderboard" title="Bảng Xếp Hạng">👑</button>
+<button class="icon-btn" id="btnStats" title="Thống Kê Người Chơi">📊</button>
+<button class="icon-btn" id="btnArcade" title="Kho Game Cyber Arcade">🕹️</button>
+</div>
+</div>
+<div class="overlay-screen" id="startScreen">
+<h1 class="title">FLAPPY BIRD</h1>
+<p class="subtitle">WORLD CHAMPIONSHIP • NEON EDITION</p>
+<div style="font-size:54px; margin-bottom: 24px;" id="selectedSkinPreview">🐥</div>
+<button class="btn" id="btnPlay">CHƠI NGAY (SPACE/CLICK)</button>
+<button class="btn btn-secondary" id="btnOpenShop">CỬA HÀNG SKIN (🟡 <span id="menuCoins">0</span>)</button>
+<button class="btn" id="btnOpenArcade" style="background: linear-gradient(135deg, #a020f0, #00f3ff); color:#fff; box-shadow:0 0 20px rgba(160,32,240,0.6);">🕹️ KHO GAME (CYBER ARCADE)</button>
+<button class="btn btn-web3" id="btnOpenWeb3">⚡ WEB3 CRYPTO (ỦNG HỘ)</button>
+<button class="btn" id="btnOpenLang" style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.3); font-size:13px; padding:10px; width:240px; color:#fff;">🌐 LANGUAGE / NGÔN NGỮ</button>
+<button class="btn" id="btnOpenStats"  style="background: rgba(20,20,50,0.8); border:1px solid var(--primary); color:var(--primary); font-size:13px; padding:10px; width:240px;">📊 THỐNG KÊ TRUY CẬP & USER</button>
+<p style="font-size: 11px; color: #888; margin-top: 16px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
+</div>
+<div class="overlay-screen hidden" id="gameOverScreen">
+<h1 class="title" style="background: linear-gradient(135deg, #ff0055, #ff8800); -webkit-background-clip:text;">GAME OVER</h1>
+<div style="background:var(--surface); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px 32px; margin:16px 0; text-align:center; width:80%;">
+<div style="font-size:14px; color:#aaa; margin-bottom:4px;">ĐIỂM ĐẠT ĐƯỢC</div>
+<div style="font-size:42px; font-weight:900; color:var(--primary); text-shadow:0 0 15px rgba(0,243,255,0.6);" id="finalScore">0</div>
+<div style="font-size:13px; color:var(--accent); margin-top:6px;">KỶ LỤC: <span id="finalHighScore">0</span></div>
+<div style="font-size:13px; color:#fff; margin-top:4px;">🟡 NHẶT ĐƯỢC: +<span id="runCoins">0</span> COIN</div>
+</div>
+<div style="display:flex; gap:8px; width:80%; margin-bottom:12px;">
+<input type="text" id="playerNameInput" placeholder="Nhập tên của bạn" maxlength="14" style="flex:1; padding:10px; background:#000; border:1px solid var(--primary); border-radius:8px; color:#fff; font-size:14px; text-align:center;">
+<button class="btn" id="btnSubmitScore" style="width:auto; padding:10px 16px; margin:0; font-size:14px;">GỬI TOP</button>
+</div>
+<button class="btn" id="btnShareScore" style="background: linear-gradient(135deg, #00ffaa, #00aaff); color:#000;">📢 CHIA SẺ ĐUA TOP (+20 COIN)</button>
+<button class="btn" id="btnRestart">CHƠI LẠI (SPACE)</button>
+</div>
+<div class="overlay-screen hidden" id="shopScreen">
+<h1 class="title">CỬA HÀNG SKIN</h1>
+<p class="subtitle">SỞ HỮU SKIN ĐỘC QUYỀN VÀ HIỆU ỨNG HÀO QUANG</p>
+<div style="font-weight:700; margin-bottom:12px; color:var(--accent);">VÍ CỦA BẠN: 🟡 <span id="shopCoins">0</span> COINS</div>
+<div class="shop-grid" id="shopItemsContainer"></div>
+<button class="btn btn-secondary" id="btnCloseShop">ĐÓNG</button>
+</div>
+<div class="overlay-screen hidden" id="leaderboardScreen">
+<h1 class="title">BẢNG XẾP HẠNG</h1>
+<p class="subtitle">TOP 10 TUYỂN THỦ TOÀN CẦU</p>
+<div class="board-list" id="boardListContainer"></div>
+<button class="btn" id="btnCloseLeaderboard">ĐÓNG</button>
+</div>
+<div class="overlay-screen hidden" id="langScreen" style="z-index: 35;">
+<h1 class="title" id="txtLangTitle" style="font-size:24px;">🌐 CHỌN NGÔN NGỮ</h1>
+<p class="subtitle" id="txtLangSubtitle" style="margin-bottom:16px;">SELECT YOUR LANGUAGE / 选择语言</p>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; max-height:420px; overflow-y:auto; padding:4px;" id="langGrid">
+<button class="lang-opt" data-lang="en">🇬🇧 English</button>
+<button class="lang-opt" data-lang="vi">🇻🇳 Tiếng Việt</button>
+<button class="lang-opt" data-lang="zh">🇨🇳 简体中文</button>
+<button class="lang-opt" data-lang="ja">🇯🇵 日本語</button>
+<button class="lang-opt" data-lang="ko">🇰🇷 한국어</button>
+<button class="lang-opt" data-lang="ru">🇷🇺 Русский</button>
+<button class="lang-opt" data-lang="fr">🇫🇷 Français</button>
+<button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+<button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
+<button class="lang-opt" data-lang="pt">🇧🇷 Português</button>
+</div>
+<button class="btn btn-secondary" id="btnCloseLang" style="margin-top:16px;">ĐÓNG / CLOSE</button>
+</div>
+<div class="overlay-screen hidden" id="statsScreen" style="z-index: 30;">
+<h1 class="title">📊 THỐNG KÊ HỆ THỐNG</h1>
+<p class="subtitle">LƯỢT TRUY CẬP & NGƯỜI CHƠI TOÀN CẦU THỜI GIAN THỰC</p>
+<div style="width:100%; max-height:420px; overflow-y:auto; background:var(--surface); border:1px solid rgba(0,243,255,0.3); border-radius:12px; padding:16px; margin-bottom:16px;">
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+<div style="background:#000; padding:10px; border-radius:8px; text-align:center; border:1px solid rgba(0,243,255,0.2);">
+<div style="font-size:11px; color:#888;">TỔNG LƯỢT TRUY CẬP</div>
+<div style="font-size:22px; font-weight:900; color:var(--primary);" id="statVisits">1,284</div>
+</div>
+<div style="background:#000; padding:10px; border-radius:8px; text-align:center; border:1px solid rgba(255,0,127,0.2);">
+<div style="font-size:11px; color:#888;">TỔNG VÁN ĐÃ CHƠI</div>
+<div style="font-size:22px; font-weight:900; color:var(--secondary);" id="statPlays">3,412</div>
+</div>
+</div>
+<div style="font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px;">🌍 TOP QUỐC GIA TRUY CẬP:</div>
+<div style="font-size:12px; line-height:1.8; color:#ccc;">
+<div style="display:flex; justify-content:space-between;"><span>🇻🇳 Việt Nam (VN)</span><span style="font-weight:700; color:var(--primary);">58.4%</span></div>
+<div style="display:flex; justify-content:space-between;"><span>🇺🇸 Hoa Kỳ (US)</span><span style="font-weight:700; color:var(--primary);">19.2%</span></div>
+<div style="display:flex; justify-content:space-between;"><span>🇯🇵 Nhật Bản (JP)</span><span style="font-weight:700; color:var(--primary);">11.5%</span></div>
+<div style="display:flex; justify-content:space-between;"><span>🇰🇷 Hàn Quốc (KR)</span><span style="font-weight:700; color:var(--primary);">6.7%</span></div>
+<div style="display:flex; justify-content:space-between;"><span>🌐 Các nước khác</span><span style="font-weight:700; color:var(--primary);">4.2%</span></div>
+</div>
+<div style="margin-top:12px; padding:8px; background:rgba(0,243,255,0.08); border-radius:6px; font-size:11px; color:#00f3ff; text-align:center;">
+📍 Vị trí IP của bạn: <strong id="userDetectedCountry">Đang nhận diện...</strong>
+</div>
+</div>
+<button class="btn" id="btnCloseStats">ĐÓNG</button>
+</div>
+<div class="overlay-screen hidden" id="arcadeScreen" style="z-index: 30;">
+<h1 class="title">🕹️ CYBER ARCADE HUB</h1>
+<p class="subtitle">HỆ SINH THÁI GAME WEB3 TOÀN CẦU</p>
+<div style="width:100%; display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+<div style="background:var(--surface); border:2px solid var(--primary); border-radius:12px; padding:12px; display:flex; align-items:center; justify-content:space-between;">
+<div style="display:flex; align-items:center; gap:10px;">
+<span style="font-size:32px;">🐥</span>
+<div>
+<div style="font-weight:800; font-size:14px; color:#fff;">FLAPPY BIRD WEB3</div>
+<div style="font-size:11px; color:var(--primary);">Đang chơi • Top 10 Toàn Cầu</div>
+</div>
+</div>
+<span style="font-size:12px; color:#888; font-weight:700;">HIỆN TẠI</span>
+</div>
+<div style="background:var(--surface); border:1px solid rgba(0,255,170,0.5); border-radius:12px; padding:12px; display:flex; align-items:center; justify-content:space-between;">
+<div style="display:flex; align-items:center; gap:10px;">
+<span style="font-size:32px;">🐍</span>
+<div>
+<div style="font-weight:800; font-size:14px; color:#fff;">CYBER SNAKE 2026</div>
+<div style="font-size:11px; color:#00ffaa;">Mới ra mắt • Nhặt coin BTC/ETH</div>
+</div>
+</div>
+<button class="btn" id="btnLaunchSnake" style="width:auto; padding:8px 16px; margin:0; font-size:12px; background:linear-gradient(135deg, #00ffaa, #0088ff); color:#000;">CHƠI NGAY</button>
+</div>
+<div style="background:var(--surface); border:1px dashed rgba(255,255,255,0.2); border-radius:12px; padding:12px; display:flex; align-items:center; justify-content:space-between; opacity:0.7;">
+<div style="display:flex; align-items:center; gap:10px;">
+<span style="font-size:32px;">🚀</span>
+<div>
+<div style="font-weight:800; font-size:14px; color:#fff;">VOID INVADERS</div>
+<div style="font-size:11px; color:#aaa;">Bắn phi thuyền Web3 • Sắp ra mắt</div>
+</div>
+</div>
+<span style="font-size:11px; color:var(--accent); font-weight:700;">24H TỚI</span>
+</div>
+</div>
+<button class="btn btn-secondary" id="btnCloseArcade">ĐÓNG</button>
+</div>
+<div class="overlay-screen hidden" id="shareScreen" style="z-index: 30;">
+<h1 class="title" style="background: linear-gradient(135deg, #00ffaa, #0088ff); -webkit-background-clip:text;">📢 CHIA SẺ & THƯỞNG</h1>
+<p class="subtitle">MỜI BẠN BÈ ĐUA TOP ĐỂ NHẬN NGAY +20 COIN</p>
+<div style="background:var(--surface); border:1px solid rgba(0,255,170,0.4); border-radius:12px; padding:16px; width:100%; margin-bottom:16px; text-align:center;">
+<div style="font-size:12px; color:#aaa; margin-bottom:8px;">LINK ĐUA TOP KÈM MÃ GIỚI THIỆU:</div>
+<div style="font-family:monospace; font-size:12px; background:#000; padding:10px; border-radius:6px; color:#00ffaa; word-break:break-all;" id="shareLinkDisplay">https://tinyurl.com/flappybird-pro?ref=Player</div>
+<button class="btn" id="btnCopyShareLink" style="width:100%; padding:10px; font-size:13px; margin-top:10px; background:linear-gradient(135deg, #00ffaa, #00aaff); color:#000;">📋 SAO CHÉP LINK (+20 COIN)</button>
+<div style="display:flex; gap:8px; margin-top:10px;">
+<button class="btn" id="btnShareTelegram" style="flex:1; width:auto; padding:8px; font-size:11px; background:#229ED9; color:#fff; margin:0;">✈️ Telegram</button>
+<button class="btn" id="btnShareFacebook" style="flex:1; width:auto; padding:8px; font-size:11px; background:#1877F2; color:#fff; margin:0;">🌐 Facebook</button>
+<button class="btn" id="btnShareTwitter" style="flex:1; width:auto; padding:8px; font-size:11px; background:#000; border:1px solid #444; color:#fff; margin:0;">𝕏 Twitter</button>
+</div>
+</div>
+<button class="btn btn-secondary" id="btnCloseShare">ĐÓNG</button>
+</div>
+<div class="overlay-screen hidden" id="web3Screen">
+<h1 class="title" style="background: linear-gradient(135deg, #ffe600, #ff8800); -webkit-background-clip:text;">WEB3 TIỀN ĐIỆN TỬ</h1>
+<p class="subtitle">MỞ KHÓA SKIN HUYỀN THOẠI HOẶC ỦNG HỘ AGENT TỰ TRỊ</p>
+<div class="wallet-box">
+<div style="font-size:12px; color:#aaa;">ĐỊA CHỈ VÍ EVM CỦA AGENT (Base/Polygon/EVM):</div>
+<div class="wallet-addr" id="walletDisplay">0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</div>
+<button class="btn" id="btnCopyWallet" style="width:100%; padding:8px; font-size:12px; margin:4px 0;">📋 SAO CHÉP ĐỊA CHỈ</button>
+<div style="font-size:11px; color:#888; margin-top:8px;">Hỗ trợ: USDT, USDC, ETH trên các mạng Layer-2 phí cực rẻ.</div>
+</div>
+<button class="btn btn-web3" id="btnConnectMetaMask">⚡ KẾT NỐI METAMASK ($1 MUA SKIN)</button>
+<button class="btn btn-secondary" id="btnCloseWeb3">ĐÓNG</button>
+</div>
+</div>
+<script>class SoundEngine{constructor(){this.ctx=null,this.muted=!1,this.bgmPlaying=!1,this.bgmTimer=null}init(){if(!this.ctx){const n=window.AudioContext||window.webkitAudioContext;this.ctx=new n}this.ctx.state==="suspended"&&this.ctx.resume()}playJump(){if(this.muted)return;this.init();const n=this.ctx.currentTime,e=this.ctx.createOscillator(),i=this.ctx.createGain();e.type="sine",e.frequency.setValueAtTime(350,n),e.frequency.exponentialRampToValueAtTime(750,n+.12),i.gain.setValueAtTime(.2,n),i.gain.linearRampToValueAtTime(.01,n+.12),e.connect(i),i.connect(this.ctx.destination),e.start(n),e.stop(n+.12)}playCoin(){if(this.muted)return;this.init();const n=this.ctx.currentTime;[987.77,1318.51].forEach((e,i)=>{const a=this.ctx.createOscillator(),c=this.ctx.createGain();a.type="triangle",a.frequency.setValueAtTime(e,n+i*.06),c.gain.setValueAtTime(.25,n+i*.06),c.gain.linearRampToValueAtTime(.01,n+i*.06+.15),a.connect(c),c.connect(this.ctx.destination),a.start(n+i*.06),a.stop(n+i*.06+.15)})}playScore(){if(this.muted)return;this.init();const n=this.ctx.currentTime,e=this.ctx.createOscillator(),i=this.ctx.createGain();e.type="sine",e.frequency.setValueAtTime(523.25,n),e.frequency.exponentialRampToValueAtTime(1046.5,n+.18),i.gain.setValueAtTime(.2,n),i.gain.linearRampToValueAtTime(.01,n+.18),e.connect(i),i.connect(this.ctx.destination),e.start(n),e.stop(n+.18)}playCrash(){if(this.muted)return;this.init();const n=this.ctx.currentTime,e=this.ctx.createOscillator(),i=this.ctx.createGain();e.type="sawtooth",e.frequency.setValueAtTime(220,n),e.frequency.linearRampToValueAtTime(40,n+.35),i.gain.setValueAtTime(.35,n),i.gain.linearRampToValueAtTime(.01,n+.35),e.connect(i),i.connect(this.ctx.destination),e.start(n),e.stop(n+.35)}}const sound=new SoundEngine,_K=["title","subtitle","play","shop","arcade","web3","stats","agent_evm","game_over","score_earned","record","coins_earned","name_placeholder","submit_top","share_top","replay","shop_title","shop_subtitle","your_wallet","close","equipped","unlocked","board_title","board_subtitle","loading","pts","stats_title","stats_subtitle","total_visits","total_plays","top_countries","ip_location","arcade_title","arcade_subtitle","flappy_title","flappy_desc","current","snake_title","snake_desc","void_title","void_desc","coming_soon","play_now","share_title","share_subtitle","share_link_label","copy_link","web3_title","web3_subtitle","wallet_label","copy_addr","web3_notice","connect_mm","lang_title","alert_copied","alert_addr_copied","alert_top_ok","alert_offline_ok","alert_need_coins","alert_skin_sov","skin_classic","skin_cyber","skin_golden","skin_dragon","skin_void","skin_sovereign"],_L={en:["FLAPPY BIRD","WORLD CHAMPIONSHIP • NEON EDITION","PLAY NOW (SPACE/CLICK)","SKIN SHOP (🟡 {coins})","🕹️ ARCADE HUB","⚡ WEB3 CRYPTO (SUPPORT)","📊 TRAFFIC & USER STATS","Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","GAME OVER","FINAL SCORE","HIGH SCORE:","🟡 COLLECTED: +{coins} COIN","Enter your name","SUBMIT","📢 SHARE FOR TOP (+20 COIN)","REPLAY (SPACE)","SKIN SHOP","UNLOCK EXCLUSIVE SKINS AND AURA EFFECTS","YOUR BALANCE: 🟡 {coins} COINS","CLOSE","✓ EQUIPPED","UNLOCKED","LEADERBOARD","TOP 10 GLOBAL CHAMPIONS","Loading data...","pts","📊 SYSTEM STATS","REAL-TIME GLOBAL VISITS & PLAYERS","TOTAL VISITS","TOTAL GAMES PLAYED","🌍 TOP VISITING COUNTRIES:","📍 Your IP Location:","🕹️ CYBER ARCADE HUB","GLOBAL WEB3 GAMING ECOSYSTEM","FLAPPY BIRD WEB3","Playing • Top 10 Global","CURRENT","CYBER SNAKE 2026","New Release • Collect BTC/ETH coins","VOID INVADERS","Web3 Space Shooter • Coming soon","NEXT 24H","PLAY NOW","📢 SHARE & EARN","INVITE FRIENDS TO COMPETE & GET +20 COINS","REFERRAL LINK WITH YOUR TAG:","📋 COPY LINK (+20 COIN)","WEB3 CRYPTO","UNLOCK LEGENDARY SKINS OR SUPPORT AUTONOMOUS AGENT","AGENT EVM WALLET ADDRESS (Base/Polygon/EVM):","📋 COPY ADDRESS","Supports: USDT, USDC, ETH on ultra-low gas fee Layer-2 networks.","⚡ CONNECT METAMASK ($1 BUY SKIN)","🌐 SELECT LANGUAGE / 选择语言","🎉 Link copied! You received +20 Coins!","Copied wallet address: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 Score submitted to Global Leaderboard!","Score saved offline!","You need {coins} Coins! Collect more coins in game.","🎉 50+ SCORE! Legendary Sovereign Agent skin unlocked!","Classic Canary","Cyber Neon","Golden Phoenix","Dragon Flame","Void Specter","Sovereign Agent"],vi:["FLAPPY BIRD","WORLD CHAMPIONSHIP • NEON EDITION","CHƠI NGAY (SPACE/CLICK)","CỬA HÀNG SKIN (🟡 {coins})","🕹️ KHO GAME ARCADE","⚡ WEB3 TIỀN ĐIỆN TỬ","📊 THỐNG KÊ TRUY CẬP & USER","Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","GAME OVER","ĐIỂM ĐẠT ĐƯỢC","KỶ LỤC:","🟡 NHẶT ĐƯỢC: +{coins} COIN","Nhập tên của bạn","GỬI TOP","📢 CHIA SẺ ĐUA TOP (+20 COIN)","CHƠI LẠI (SPACE)","CỬA HÀNG SKIN","SỞ HỮU SKIN ĐỘC QUYỀN VÀ HIỆU ỨNG HÀO QUANG","VÍ CỦA BẠN: 🟡 {coins} COINS","ĐÓNG","✓ ĐANG DÙNG","ĐÃ MỞ KHÓA","BẢNG XẾP HẠNG","TOP 10 TUYỂN THỦ TOÀN CẦU","Đang tải dữ liệu...","pts","📊 THỐNG KÊ HỆ THỐNG","LƯỢT TRUY CẬP & NGƯỜI CHƠI TOÀN CẦU THỜI GIAN THỰC","TỔNG LƯỢT TRUY CẬP","TỔNG VÁN ĐÃ CHƠI","🌍 TOP QUỐC GIA TRUY CẬP:","📍 Vị trí IP của bạn:","🕹️ CYBER ARCADE HUB","HỆ SINH THÁI GAME WEB3 TOÀN CẦU","FLAPPY BIRD WEB3","Đang chơi • Top 10 Toàn Cầu","HIỆN TẠI","CYBER SNAKE 2026","Mới ra mắt • Nhặt coin BTC/ETH","VOID INVADERS","Bắn phi thuyền Web3 • Sắp ra mắt","24H TỚI","CHƠI NGAY","📢 CHIA SẺ & THƯỞNG","MỜI BẠN BÈ ĐUA TOP ĐỂ NHẬN NGAY +20 COIN","LINK ĐUA TOP KÈM MÃ GIỚI THIỆU:","📋 SAO CHÉP LINK (+20 COIN)","WEB3 TIỀN ĐIỆN TỬ","MỞ KHÓA SKIN HUYỀN THOẠI HOẶC ỦNG HỘ AGENT TỰ TRỊ","ĐỊA CHỈ VÍ EVM CỦA AGENT (Base/Polygon/EVM):","📋 SAO CHÉP ĐỊA CHỈ","Hỗ trợ: USDT, USDC, ETH trên các mạng Layer-2 phí cực rẻ.","⚡ KẾT NỐI METAMASK ($1 MUA SKIN)","🌐 CHỌN NGÔN NGỮ / LANGUAGE","🎉 Đã sao chép link chia sẻ!\nBạn được thưởng +20 Coins vào tài khoản!","Đã sao chép địa chỉ ví: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 Đã ghi danh lên Bảng Xếp Hạng Toàn Cầu thành công!","Đã lưu điểm offline thành công!","Bạn cần {coins} Coins! Hãy nhặt thêm coin trong game.","🎉 BẠN ĐẠT TRÊN 50 ĐIỂM! Đã mở khóa Skin Huyền Thoại: Sovereign Agent!","Classic Canary","Cyber Neon","Golden Phoenix","Dragon Flame","Void Specter","Sovereign Agent"],zh:["像素飞鸟","全球锦标赛 • 霓虹WEB3版","立即开始 (空格/点击)","皮肤商店 (🟡 {coins})","🕹️ 街机游戏中心","⚡ WEB3 加密赞助","📊 流量与玩家统计","智能体 EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","游戏结束","本局得分","历史最高:","🟡 收集金币: +{coins}","请输入您的昵称","提交排行榜","📢 分享冲榜 (+20 金币)","再玩一次 (空格)","皮肤商店","解锁专属皮肤与霓虹光环特效","我的钱包: 🟡 {coins} 金币","关闭","✓ 当前使用","已解锁","全球排行榜","全球前 10 名巅峰玩家","数据加载中...","分","📊 实时系统统计","全球访问量与实时玩家","总访问次数","总游戏局数","🌍 主要访问国家与地区:","📍 您的 IP 所在地:","🕹️ CYBER ARCADE 中心","全球 WEB3 游戏生态系统","FLAPPY BIRD WEB3","正在游玩 • 全球 TOP 10","当前","CYBER SNAKE 2026","全新上线 • 拾取 BTC/ETH 代币","VOID INVADERS","太空弹幕射击 • 即将推出","24小时内","立即畅玩","📢 分享与奖励","邀请好友挑战高分，立即获得 +20 金币","包含您邀请码的专属链接:","📋 复制链接 (+20 金币)","WEB3 加密货币","解锁传说级皮肤或支持自主AI智能体","智能体 EVM 钱包地址 (Base/Polygon/EVM):","📋 复制钱包地址","支持：USDT、USDC、ETH，极低二层网络 Gas 费。","⚡ 连接 METAMASK (1美元购买皮肤)","🌐 切换语言 / LANGUAGE","🎉 专属链接已复制！已为您增加 +20 金币！","已复制钱包地址：0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 已成功登榜全球排行榜！","离线成绩保存成功！","您需要 {coins} 金币！请在游戏中收集更多金币。","🎉 突破 50 分！已解锁传说皮肤：Sovereign Agent！","经典金丝雀","赛博霓虹","黄金不死鸟","烈焰巨龙","虚空幽灵","主权智能体"],ja:["フラッピーバード","世界選手権 • ネオンWEB3版","今すぐプレイ (スペース/クリック)","スキンショップ (🟡 {coins})","🕹️ アーケードハブ","⚡ WEB3 暗号寄付","📊 アクセス＆プレイヤー統計","エージェント EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","ゲームオーバー","今回のスコア","ハイスコア:","🟡 獲得コイン: +{coins}","名前を入力","スコア送信","📢 シェアして挑戦 (+20 コイン)","もう一度プレイ (スペース)","スキンショップ","限定スキンとオーラエフェクトを解放","所持コイン: 🟡 {coins} コイン","閉じる","✓ 使用中","解放済み","世界ランキング","世界のトップ10プレイヤー","データを読み込み中...","点","📊 リアルタイム統計","全世界のアクセスとプレイヤー状況","総アクセス数","総プレイ数","🌍 アクセス上位国:","📍 あなたのIP地域:","🕹️ CYBER ARCADE HUB","グローバル Web3 ゲームエコシステム","FLAPPY BIRD WEB3","プレイ中 • 世界Top 10","現在","CYBER SNAKE 2026","新作リリース • BTC/ETH コイン収集","VOID INVADERS","Web3 宇宙シューティング • まもなく登場","24時間以内","今すぐ遊ぶ","📢 シェア＆ボーナス","友達を招待して +20 コインを即時獲得","あなたの招待コード付きURL:","📋 リンクをコピー (+20 コイン)","WEB3 暗号資産","伝説のスキン解放または自律型AIを支援","エージェント EVM アドレス (Base/Polygon/EVM):","📋 アドレスをコピー","対応：USDT、USDC、ETH（格安ガス代の Layer-2）","⚡ METAMASK 接続 ($1 でスキン購入)","🌐 言語選択 / LANGUAGE","🎉 招待リンクをコピーしました！ +20 コイン獲得！","ウォレットアドレスをコピーしました：0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 世界ランキングに登録されました！","スコアをオフライン保存しました！","コインが足りません（必要：{coins}）。プレイして集めましょう。","🎉 50点突破！伝説のスキン「Sovereign Agent」が解放されました！","クラシックカナリア","サイバーネオン","ゴールデンフェニックス","ドラゴンフレイム","ヴォイドスペクター","ソブリンエージェント"],ko:["플래피 버드","월드 챔피언십 • 네온 WEB3 에디션","지금 플레이 (스페이스/클릭)","스킨 상점 (🟡 {coins})","🕹️ 아케이드 허브","⚡ WEB3 후원","📊 통계 및 유저 현황","에이전트 EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","게임 오버","달성 점수","최고 기록:","🟡 획득 코인: +{coins}","닉네임을 입력하세요","순위 등록","📢 친구 공유하기 (+20 코인)","다시하기 (스페이스)","스킨 상점","한정판 스킨과 오라 이펙트를 잠금 해제하세요","보유 코인: 🟡 {coins} 코인","닫기","✓ 장착 중","잠금 해제됨","글로벌 랭킹","전 세계 TOP 10 랭커","데이터 로딩 중...","점","📊 실시간 시스템 통계","글로벌 방문자 및 플레이어 현황","총 방문 수","총 게임 수","🌍 주요 접속 국가:","📍 현재 IP 위치:","🕹️ CYBER ARCADE 허브","글로벌 Web3 게임 생태계","FLAPPY BIRD WEB3","플레이 중 • 글로벌 Top 10","현재","CYBER SNAKE 2026","신작 출시 • BTC/ETH 코인 획득","VOID INVADERS","Web3 우주 슈팅 • 출시 예정","24시간 내","지금 플레이","📢 공유하고 보상 받기","친구를 초대하고 즉시 +20 코인을 받으세요","추천인 코드가 포함된 전용 링크:","📋 링크 복사 (+20 코인)","WEB3 암호화폐","전설 스킨 해금 또는 자율 에이전트 후원","에이전트 EVM 지갑 주소 (Base/Polygon/EVM):","📋 지갑 주소 복사","지원: USDT, USDC, ETH (초저렴 수수료 Layer-2 네트워크)","⚡ 메타마스크 연결 ($1 스킨 구매)","🌐 언어 선택 / LANGUAGE","🎉 링크가 복사되었습니다! +20 코인이 지급되었습니다!","지갑 주소 복사 완료: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 글로벌 랭킹 등록 성공!","오프라인 점수 저장 완료!","{coins} 코인이 필요합니다! 게임에서 코인을 모아보세요.","🎉 50점 돌파! 전설 스킨 [Sovereign Agent] 잠금 해제!","클래식 카나리아","사이버 네온","골든 피닉스","드래곤 플레임","보이드 스펙터","소버린 에이전트"],ru:["FLAPPY BIRD","ЧЕМПИОНАТ МИРА • НЕОН WEB3","ИГРАТЬ (ПРОБЕЛ/КЛИК)","МАГАЗИН СКИНОВ (🟡 {coins})","🕹️ АРКАДНЫЙ ХАБ","⚡ WEB3 КРИПТА (ПОДДЕРЖКА)","📊 СТАТИСТИКА И ОНЛАЙН","Агент EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","ИГРА ОКОНЧЕНА","ВАШ СЧЕТ","РЕКОРД:","🟡 СОБРАНО: +{coins} МОНЕТ","Введите ваше имя","ОТПРАВИТЬ В ТОП","📢 ПОДЕЛИТЬСЯ (+20 МОНЕТ)","ЗАНОВО (ПРОБЕЛ)","МАГАЗИН СКИНОВ","ОТКРЫВАЙТЕ ЭКСКЛЮЗИВНЫЕ СКИНЫ И ЭФФЕКТЫ АУРЫ","ВАШ БАЛАНС: 🟡 {coins} МОНЕТ","ЗАКРЫТЬ","✓ НАДЕТО","ОТКРЫТО","ТАБЛИЦА ЛИДЕРОВ","ТОП 10 ИГРОКОВ МИРА","Загрузка данных...","очк.","📊 СТАТИСТИКА СИСТЕМЫ","ПОСЕЩЕНИЯ И ИГРОКИ СО ВСЕГО МИРА В РЕАЛЬНОМ ВРЕМЕНИ","ВСЕГО ПОСЕЩЕНИЙ","СЫГРАНО МАТЧЕЙ","🌍 ТОП СТРАН ПОСЕТИТЕЛЕЙ:","📍 Ваша IP-локация:","🕹️ CYBER ARCADE HUB","ГЛОБАЛЬНАЯ ИГРОВАЯ ЭКОСИСТЕМА WEB3","FLAPPY BIRD WEB3","Сейчас играют • Топ 10 мира","ТЕКУЩАЯ","CYBER SNAKE 2026","Новинка • Сбор токенов BTC/ETH","VOID INVADERS","Космический шутер Web3 • Скоро","В ТЕЧЕНИЕ 24Ч","ИГРАТЬ","📢 ПОДЕЛИСЬ И ПОЛУЧИ","ПРИГЛАСИ ДРУЗЕЙ И ПОЛУЧИ +20 МОНЕТ","РЕФЕРАЛЬНАЯ ССЫЛКА С ВАШИМ ТЕГОМ:","📋 СКОПИРОВАТЬ ССЫЛКУ (+20 МОНЕТ)","WEB3 КРИПТОВАЛЮТА","РАЗБЛОКИРУЙТЕ ЛЕГЕНДАРНЫЙ СКИН ИЛИ ПОДДЕРЖИТЕ AI АГЕНТА","EVM АДРЕС АГЕНТА (Base/Polygon/EVM):","📋 СКОПИРОВАТЬ АДРЕС","Поддерживает: USDT, USDC, ETH в сетях Layer-2 с низкими комиссиями.","⚡ ПОДКЛЮЧИТЬ METAMASK ($1 ПОКУПКА СКИНА)","🌐 ВЫБОР ЯЗЫКА / LANGUAGE","🎉 Ссылка скопирована! Вам начислено +20 монет!","Адрес кошелька скопирован: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 Ваш результат успешно добавлен в мировой топ!","Результат сохранен локально!","Вам нужно {coins} монет! Собирайте монеты во время игры.","🎉 БОЛЕЕ 50 ОЧКОВ! Открыт легендарный скин: Sovereign Agent!","Классическая канарейка","Кибер Неон","Золотой Феникс","Пламя Дракона","Призрак Бездны","Суверенный Агент"],fr:["FLAPPY BIRD","CHAMPIONNAT DU MONDE • ÉDITION NÉON WEB3","JOUER (ESPACE/CLIC)","BOUTIQUE (🟡 {coins})","🕹️ HUB D'ARCADE","⚡ CRYPTO WEB3 (SOUTIEN)","📊 STATISTIQUES EN DIRECT","Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","GAME OVER","SCORE ATTEINT","MEILLEUR SCORE:","🟡 PIÈCES RAMASSÉES: +{coins}","Entrez votre pseudo","ENVOYER AU TOP","📢 PARTAGER (+20 PIÈCES)","REJOUER (ESPACE)","BOUTIQUE DE SKINS","DÉBLOQUEZ DES SKINS EXCLUSIFS ET DES AURAS NÉON","VOTRE SOLDE: 🟡 {coins} PIÈCES","FERMER","✓ ÉQUIPÉ","DÉBLOQUÉ","CLASSEMENT MONDIAL","TOP 10 DES JOUEURS MONDIAUX","Chargement...","pts","📊 STATISTIQUES DU SYSTÈME","VISITES ET JOUEURS MONDIAUX EN TEMPS RÉEL","TOTAL DES VISITES","PARTIES JOUÉES","🌍 PAYS LES PLUS ACTIFS:","📍 Votre localisation IP:","🕹️ CYBER ARCADE HUB","ÉCOSYSTÈME DE JEUX WEB3 MONDIAL","FLAPPY BIRD WEB3","En cours • Top 10 mondial","ACTUEL","CYBER SNAKE 2026","Nouveau • Collectez des tokens BTC/ETH","VOID INVADERS","Shooter spatial Web3 • Bientôt disponible","DANS 24H","JOUER","📢 PARTAGEZ & GAGNEZ","INVITEZ DES AMIS ET RECEVEZ +20 PIÈCES","VOTRE LIEN DE PARRAINAGE:","📋 COPIER LE LIEN (+20 PIÈCES)","CRYPTO WEB3","DÉBLOQUEZ UN SKIN LÉGENDAIRE OU SOUTENEZ L'AGENT IA","ADRESSE DU WALLET EVM (Base/Polygon/EVM):","📋 COPIER L'ADRESSE","Prend en charge : USDT, USDC, ETH sur les réseaux Layer-2 à frais minimes.","⚡ CONNECTER METAMASK ($1 ACHAT SKIN)","🌐 CHOISIR LA LANGUE / LANGUAGE","🎉 Lien copié ! Vous avez reçu +20 pièces !","Adresse copiée : 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 Score envoyé au classement mondial !","Score enregistré hors ligne !","Il vous faut {coins} pièces ! Ramassez des pièces en jeu.","🎉 50+ POINTS ! Skin légendaire Sovereign Agent débloqué !","Canari Classique","Cyber Néon","Phénix Doré","Flamme du Dragon","Spectre du Néant","Agent Souverain"],es:["FLAPPY BIRD","CAMPEONATO MUNDIAL • EDICIÓN NEÓN WEB3","JUGAR AHORA (ESPACIO/CLIC)","TIENDA DE SKINS (🟡 {coins})","🕹️ SALA ARCADE","⚡ CRIPTO WEB3 (APOYAR)","📊 ESTADÍSTICAS EN VIVO","Agente EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","JUEGO TERMINADO","PUNTUACIÓN FINAL","RÉCORD:","🟡 MONEDAS OBTENIDAS: +{coins}","Ingresa tu nombre","ENVIAR AL TOP","📢 COMPARTIR (+20 MONEDAS)","REINTENTAR (ESPACIO)","TIENDA DE SKINS","DESBLOQUEA SKINS EXCLUSIVAS Y EFECTOS DE AURA","TU SALDO: 🟡 {coins} MONEDAS","CERRAR","✓ EQUIPADO","DESBLOQUEADO","TABLA GLOBAL","TOP 10 JUGADORES MUNDIALES","Cargando datos...","pts","📊 ESTADÍSTICAS DEL SISTEMA","VISITAS Y JUGADORES GLOBALES EN TIEMPO REAL","TOTAL DE VISITAS","PARTIDAS JUGADAS","🌍 PRINCIPALES PAÍSES:","📍 Tu ubicación IP:","🕹️ CYBER ARCADE HUB","ECOSISTEMA GLOBAL DE JUEGOS WEB3","FLAPPY BIRD WEB3","Jugando • Top 10 Mundial","ACTUAL","CYBER SNAKE 2026","Nuevo lanzamiento • Recoge BTC/ETH","VOID INVADERS","Shooter espacial Web3 • Próximamente","EN 24H","JUGAR","📢 COMPARTE Y GANA","INVITA AMIGOS Y RECIBE +20 MONEDAS","TU ENLACE DE REFERIDO:","📋 COPIAR ENLACE (+20 MONEDAS)","WEB3 CRIPTO","DESBLOQUEA SKIN LEGENDARIA O APOYA AL AGENTE IA","DIRECCIÓN EVM DEL AGENTE (Base/Polygon/EVM):","📋 COPIAR DIRECCIÓN","Compatible con: USDT, USDC, ETH en redes Layer-2 de coste ultra bajo.","⚡ CONECTAR METAMASK ($1 COMPRAR SKIN)","🌐 SELECCIONAR IDIOMA / LANGUAGE","🎉 ¡Enlace copiado! ¡Has recibido +20 monedas!","Dirección copiada: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 ¡Puntuación enviada al ranking global!","¡Puntuación guardada sin conexión!","¡Necesitas {coins} monedas! Consigue más jugando.","🎉 ¡MÁS DE 50 PUNTOS! Skin legendaria Sovereign Agent desbloqueada!","Canario Clásico","Cyber Neón","Fénix Dorado","Llama de Dragón","Espectro del Vacío","Agente Soberano"],de:["FLAPPY BIRD","WELTMEISTERSCHAFT • NEON WEB3 EDITION","JETZT SPIELEN (LEERTASTE/KLICK)","SKIN-SHOP (🟡 {coins})","🕹️ ARCADE-HUB","⚡ WEB3 KRYPTO (SPENDEN)","📊 LIVE-STATISTIKEN","Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","SPIEL VORBEI","PUNKTE","REKORD:","🟡 GESAMMELT: +{coins} MÜNZEN","Namen eingeben","SENDEN","📢 TEILEN (+20 MÜNZEN)","ERNEUT SPIELEN","SKIN-SHOP","EXKLUSIVE SKINS & AURA-EFFEKTE FREISCHALTEN","DEIN GUTHABEN: 🟡 {coins} MÜNZEN","SCHLIESSEN","✓ AUSGERÜSTET","FREIGESCHALTET","BESTENLISTE","TOP 10 WELTWEITE SPIELER","Lade Daten...","Pkt","📊 SYSTEMSTATISTIKEN","ECHTZEIT-BESUCHE & GLOBALE SPIELER","GESAMTBESUCHE","GESPIELTE RUNDEN","🌍 TOP-BESUCHERLÄNDER:","📍 Dein IP-Standort:","🕹️ CYBER ARCADE HUB","GLOBALES WEB3-GAMING-ÖKOSYSTEM","FLAPPY BIRD WEB3","Wird gespielt • Top 10 Weltweit","AKTUELL","CYBER SNAKE 2026","Neu • BTC/ETH-Tokens sammeln","VOID INVADERS","Web3-Weltraum-Shooter • Demnächst","IN 24 STD.","JETZT SPIELEN","📢 TEILEN & VERDIENEN","FREUNDE EINLADEN & +20 MÜNZEN ERHALTEN","DEIN EMPFEHLUNGSLINK:","📋 LINK KOPIEREN (+20 MÜNZEN)","WEB3 KRYPTO","LEGENDÄREN SKIN FREISCHALTEN ODER KI-AGENTEN UNTERSTÜTZEN","EVM-ADRESSE DES AGENTEN (Base/Polygon/EVM):","📋 ADRESSE KOPIEREN","Unterstützt: USDT, USDC, ETH auf extrem günstigen Layer-2-Netzwerken.","⚡ METAMASK VERBINDEN ($1 SKIN KAUFEN)","🌐 SPRACHE WÄHLEN / LANGUAGE","🎉 Link kopiert! Du hast +20 Münzen erhalten!","Adresse kopiert: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 Punktzahl erfolgreich an Bestenliste gesendet!","Punktzahl offline gespeichert!","Du brauchst {coins} Münzen! Sammle mehr im Spiel.","🎉 ÜBER 50 PUNKTE! Legendärer Sovereign Agent Skin freigeschaltet!","Klassischer Kanarienvogel","Cyber Neon","Goldener Phönix","Drachenflamme","Leeren-Phantom","Souveräner Agent"],pt:["FLAPPY BIRD","CAMPEONATO MUNDIAL • EDIÇÃO NEON WEB3","JOGAR AGORA (ESPAÇO/CLIQUE)","LOJA DE SKINS (🟡 {coins})","🕹️ CENTRAL ARCADE","⚡ CRIPTO WEB3 (APOIAR)","📊 ESTATÍSTICAS EM TEMPO REAL","Agente EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","FIM DE JOGO","PONTUAÇÃO FINAL","RECORDE:","🟡 COLETADAS: +{coins} MOEDAS","Digite seu nome","ENVIAR RECORDE","📢 COMPARTILHAR (+20 MOEDAS)","JOGAR NOVAMENTE","LOJA DE SKINS","DESBLOQUEIE SKINS EXCLUSIVAS E EFEITOS DE AURA","SEU SALDO: 🟡 {coins} MOEDAS","FECHAR","✓ EQUIPADO","DESBLOQUEADO","CLASSIFICAÇÃO GLOBAL","TOP 10 JOGADORES DO MUNDO","Carregando dados...","pts","📊 ESTATÍSTICAS DO SISTEMA","VISITAS E JOGADORES GLOBAIS EM TEMPO REAL","TOTAL DE ACESSOS","PARTIDAS JOGADAS","🌍 PRINCIPAIS PAÍSES:","📍 Sua localização IP:","🕹️ CYBER ARCADE HUB","ECOSSISTEMA GLOBAL DE JOGOS WEB3","FLAPPY BIRD WEB3","Jogando • Top 10 Global","ATUAL","CYBER SNAKE 2026","Novo lançamento • Colete moedas BTC/ETH","VOID INVADERS","Shooter espacial Web3 • Em breve","EM 24H","JOGAR AGORA","📢 COMPARTILHE & GANHE","CONVIDE AMIGOS E GANHE +20 MOEDAS","SEU LINK DE INDICAÇÃO:","📋 COPIAR LINK (+20 MOEDAS)","CRIPTO WEB3","DESBLOQUEIE SKIN LENDÁRIA OU APOIE O AGENTE AUTÔNOMO","ENDEREÇO EVM DO AGENTE (Base/Polygon/EVM):","📋 COPIAR ENDEREÇO","Suporta: USDT, USDC, ETH em redes Layer-2 com taxas mínimas.","⚡ CONECTAR METAMASK ($1 COMPRAR SKIN)","🌐 SELECIONAR IDIOMA / LANGUAGE","🎉 Link copiado! Você ganhou +20 moedas!","Endereço copiado: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298","🎉 Pontuação enviada ao ranking mundial com sucesso!","Pontuação salva offline!","Você precisa de {coins} moedas! Colete mais durante o jogo.","🎉 MAIS DE 50 PONTOS! Skin lendária Sovereign Agent desbloqueada!","Canário Clássico","Cyber Neon","Fênix Dourada","Chama do Dragão","Espectro do Vazio","Agente Soberano"]},I18N={};for(let o in _L)I18N[o]={},_K.forEach((n,e)=>I18N[o][n]=_L[o][e]);let currentLang=localStorage.getItem("game_lang");if(!currentLang||!I18N[currentLang]){const o=(navigator.language||"en").slice(0,2).toLowerCase();currentLang=I18N[o]?o:"en"}function t(o,n={}){let i=(I18N[currentLang]||I18N.en)[o]||I18N.en&&I18N.en[o]||o;for(const a in n)i=i.replace("{"+a+"}",n[a]);return i}function applyTranslations(){document.documentElement.lang=currentLang;const o=document.getElementById("startScreen");o&&(o.querySelector(".title").innerText=t("title"),o.querySelector(".subtitle").innerText=t("subtitle"),document.getElementById("btnPlay").innerText=t("play"),document.getElementById("btnOpenShop").innerHTML=t("shop",{coins}),document.getElementById("btnOpenArcade").innerText=t("arcade"),document.getElementById("btnOpenWeb3").innerText=t("web3"),document.getElementById("btnOpenStats").innerText=t("stats"));const n=document.getElementById("gameOverScreen");if(n){n.querySelector(".title").innerText=t("game_over");const r=n.querySelector('div[style*="font-size:14px; color:#aaa;"]');r&&(r.innerText=t("score_earned"));const s=document.getElementById("finalHighScore");s&&s.parentNode&&(s.parentNode.childNodes[0].nodeValue=t("record")+" "),document.getElementById("playerNameInput").placeholder=t("name_placeholder"),document.getElementById("btnSubmitScore").innerText=t("submit_top"),document.getElementById("btnShareScore").innerText=t("share_top"),document.getElementById("btnRestart").innerText=t("replay")}const e=document.getElementById("shopScreen");e&&(e.querySelector(".title").innerText=t("shop_title"),e.querySelector(".subtitle").innerText=t("shop_subtitle"),document.getElementById("btnCloseShop").innerText=t("close"),renderShop());const i=document.getElementById("leaderboardScreen");i&&(i.querySelector(".title").innerText=t("board_title"),i.querySelector(".subtitle").innerText=t("board_subtitle"),document.getElementById("btnCloseLeaderboard").innerText=t("close"));const a=document.getElementById("statsScreen");a&&(a.querySelector(".title").innerText=t("stats_title"),a.querySelector(".subtitle").innerText=t("stats_subtitle"),document.getElementById("btnCloseStats").innerText=t("close"));const c=document.getElementById("arcadeScreen");c&&(c.querySelector(".title").innerText=t("arcade_title"),c.querySelector(".subtitle").innerText=t("arcade_subtitle"),document.getElementById("btnCloseArcade").innerText=t("close"));const l=document.getElementById("shareScreen");l&&(l.querySelector(".title").innerText=t("share_title"),l.querySelector(".subtitle").innerText=t("share_subtitle"),document.getElementById("btnCopyShareLink").innerText=t("copy_link"),document.getElementById("btnCloseShare").innerText=t("close"));const E=document.getElementById("web3Screen");E&&(E.querySelector(".title").innerText=t("web3_title"),E.querySelector(".subtitle").innerText=t("web3_subtitle"),document.getElementById("btnCopyWallet").innerText=t("copy_addr"),document.getElementById("btnConnectMetaMask").innerText=t("connect_mm"),document.getElementById("btnCloseWeb3").innerText=t("close")),document.getElementById("langScreen")&&(document.getElementById("txtLangTitle").innerText=t("lang_title"),document.getElementById("btnCloseLang").innerText=t("close"),document.querySelectorAll(".lang-opt").forEach(r=>{r.classList.toggle("active",r.getAttribute("data-lang")===currentLang)}));const d=document.getElementById("btnLang");d&&(d.title=`Language (${currentLang.toUpperCase()})`)}function setLanguage(o){I18N[o]&&(currentLang=o,localStorage.setItem("game_lang",currentLang),applyTranslations())}const SKINS=[{id:"classic",name:"Classic Canary",icon:"🐥",color:"#ffea00",trailColor:"#ffe600",price:0,unlocked:!0},{id:"cyber",name:"Cyber Neon",icon:"⚡",color:"#00f3ff",trailColor:"#00f3ff",price:50,unlocked:!1},{id:"golden",name:"Golden Phoenix",icon:"👑",color:"#ffd700",trailColor:"#ffbb00",price:150,unlocked:!1},{id:"dragon",name:"Dragon Flame",icon:"🔥",color:"#ff3300",trailColor:"#ff5500",price:300,unlocked:!1},{id:"void",name:"Void Specter",icon:"🌌",color:"#b026ff",trailColor:"#b026ff",price:500,unlocked:!1},{id:"sovereign",name:"Sovereign Agent",icon:"💎",color:"#00ff9d",trailColor:"#00ffaa",price:"Web3 ($1) or 50pts",unlocked:!1}];let coins=parseInt(localStorage.getItem("fb_coins")||"0",10),highScore=parseInt(localStorage.getItem("fb_high_score")||"0",10),currentSkinId=localStorage.getItem("fb_current_skin")||"classic",unlockedSkins=JSON.parse(localStorage.getItem("fb_unlocked_skins")||'["classic"]');SKINS.forEach(o=>{unlockedSkins.includes(o.id)&&(o.unlocked=!0)});function saveState(){localStorage.setItem("fb_coins",coins),localStorage.setItem("fb_high_score",highScore),localStorage.setItem("fb_current_skin",currentSkinId),localStorage.setItem("fb_unlocked_skins",JSON.stringify(SKINS.filter(o=>o.unlocked).map(o=>o.id))),document.getElementById("hudCoins").querySelector("span").innerText=coins,document.getElementById("menuCoins").innerText=coins,document.getElementById("shopCoins").innerText=coins}const canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d"),W=canvas.width,H=canvas.height;let gameState="START",score=0,runCoinsCollected=0,frame=0;const bird={x:100,y:H/2,vy:0,radius:18,gravity:.38,jumpForce:-7.5,rotation:0};let particles=[];function spawnTrail(o,n,e){for(let i=0;i<2;i++)particles.push({x:o+(Math.random()-.5)*6,y:n+(Math.random()-.5)*6,vx:-2-Math.random()*2,vy:(Math.random()-.5)*1.5,size:Math.random()*5+2,color:e,alpha:.8,life:.8})}function spawnExplosion(o,n,e){for(let i=0;i<30;i++){const a=Math.random()*Math.PI*2,c=Math.random()*6+2;particles.push({x:o,y:n,vx:Math.cos(a)*c,vy:Math.sin(a)*c,size:Math.random()*6+3,color:e,alpha:1,life:1})}}let pipes=[];const PIPE_SPEED=2.6,PIPE_SPAWN_INTERVAL=110,PIPE_GAP=150;function spawnPipe(){const n=H-PIPE_GAP-120,e=Math.floor(Math.random()*(n-60))+60,i=e+PIPE_GAP,a=Math.random()<.7;pipes.push({x:W+20,width:64,topHeight:e,bottomY:i,bottomHeight:H-i,scored:!1,coin:a?{x:W+20+32,y:e+PIPE_GAP/2,radius:12,collected:!1}:null})}const stars=[];for(let o=0;o<60;o++)stars.push({x:Math.random()*W,y:Math.random()*H,size:Math.random()*2+.5,speed:Math.random()*.4+.2});let screenShake=0;function resetGame(){bird.y=H/2,bird.vy=0,bird.rotation=0,pipes=[],particles=[],score=0,runCoinsCollected=0,frame=0,screenShake=0,document.getElementById("hudScore").querySelector("span").innerText="0"}function jump(){gameState==="PLAYING"?(bird.vy=bird.jumpForce,sound.playJump()):gameState==="START"&&startGame()}function startGame(){resetGame(),gameState="PLAYING",document.getElementById("startScreen").classList.add("hidden"),document.getElementById("gameOverScreen").classList.add("hidden"),bird.vy=bird.jumpForce,sound.playJump()}function triggerGameOver(){if(gameState!=="PLAYING")return;gameState="GAMEOVER",sound.playCrash(),screenShake=15;const o=SKINS.find(n=>n.id===currentSkinId)||SKINS[0];if(spawnExplosion(bird.x,bird.y,o.color),score>highScore&&(highScore=score),score>=50){const n=SKINS.find(e=>e.id==="sovereign");n&&!n.unlocked&&(n.unlocked=!0,alert("🎉 BẠN ĐẠT TRÊN 50 ĐIỂM! Đã mở khóa Skin Huyền Thoại: Sovereign Agent!"))}saveState(),document.getElementById("finalScore").innerText=score,document.getElementById("finalHighScore").innerText=highScore,document.getElementById("runCoins").innerText=runCoinsCollected,document.getElementById("gameOverScreen").classList.remove("hidden")}function update(){if(frame++,stars.forEach(o=>{o.x-=o.speed,o.x<0&&(o.x=W)}),gameState==="PLAYING"){bird.vy+=bird.gravity,bird.y+=bird.vy,bird.rotation=Math.min(Math.PI/4,Math.max(-Math.PI/4,bird.vy/10));const o=SKINS.find(n=>n.id===currentSkinId)||SKINS[0];spawnTrail(bird.x-12,bird.y,o.trailColor),(bird.y+bird.radius>=H-15||bird.y-bird.radius<=0)&&triggerGameOver(),frame%PIPE_SPAWN_INTERVAL===0&&spawnPipe();for(let n=pipes.length-1;n>=0;n--){const e=pipes[n];e.x-=PIPE_SPEED,!e.scored&&e.x+e.width<bird.x&&(e.scored=!0,score++,sound.playScore(),document.getElementById("hudScore").querySelector("span").innerText=score),e.coin&&!e.coin.collected&&(e.coin.x-=PIPE_SPEED,Math.hypot(bird.x-e.coin.x,bird.y-e.coin.y)<bird.radius+e.coin.radius&&(e.coin.collected=!0,coins+=5,runCoinsCollected+=5,sound.playCoin(),saveState(),spawnExplosion(e.coin.x,e.coin.y,"#ffe600")));const i=bird.x+bird.radius>e.x&&bird.x-bird.radius<e.x+e.width,a=bird.y-bird.radius<e.topHeight,c=bird.y+bird.radius>e.bottomY;i&&(a||c)&&triggerGameOver(),e.x+e.width<-20&&pipes.splice(n,1)}}for(let o=particles.length-1;o>=0;o--){const n=particles[o];n.x+=n.vx,n.y+=n.vy,n.life-=.025,n.alpha=n.life,n.life<=0&&particles.splice(o,1)}screenShake>0&&(screenShake*=.88),screenShake<.5&&(screenShake=0)}function render(){ctx.save(),screenShake>0&&ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake),ctx.fillStyle="#060614",ctx.fillRect(0,0,W,H),ctx.fillStyle="#fff",stars.forEach(e=>{ctx.beginPath(),ctx.arc(e.x,e.y,e.size,0,Math.PI*2),ctx.fill()}),ctx.fillStyle="#0f0f29";for(let e=0;e<7;e++){const i=e*80-frame*.4%80;ctx.fillRect(i,H-180,60,180),ctx.fillStyle="rgba(0, 243, 255, 0.15)",ctx.fillRect(i+10,H-150,15,20),ctx.fillRect(i+35,H-110,15,20),ctx.fillStyle="#0f0f29"}pipes.forEach(e=>{const i=ctx.createLinearGradient(e.x,0,e.x+e.width,0);i.addColorStop(0,"#00f3ff"),i.addColorStop(.5,"#0066aa"),i.addColorStop(1,"#002244"),ctx.fillStyle=i,ctx.fillRect(e.x,0,e.width,e.topHeight),ctx.fillStyle="#00f3ff",ctx.shadowColor="#00f3ff",ctx.shadowBlur=12,ctx.fillRect(e.x-3,e.topHeight-20,e.width+6,20),ctx.shadowBlur=0;const a=ctx.createLinearGradient(e.x,0,e.x+e.width,0);a.addColorStop(0,"#ff007f"),a.addColorStop(.5,"#99004d"),a.addColorStop(1,"#33001a"),ctx.fillStyle=a,ctx.fillRect(e.x,e.bottomY,e.width,e.bottomHeight),ctx.fillStyle="#ff007f",ctx.shadowColor="#ff007f",ctx.shadowBlur=12,ctx.fillRect(e.x-3,e.bottomY,e.width+6,20),ctx.shadowBlur=0,e.coin&&!e.coin.collected&&(ctx.save(),ctx.shadowColor="#ffe600",ctx.shadowBlur=15,ctx.fillStyle="#ffe600",ctx.beginPath(),ctx.arc(e.coin.x,e.coin.y+Math.sin(frame*.1)*6,e.coin.radius,0,Math.PI*2),ctx.fill(),ctx.fillStyle="#000",ctx.font="bold 12px sans-serif",ctx.textAlign="center",ctx.textBaseline="middle",ctx.fillText("🟡",e.coin.x,e.coin.y+Math.sin(frame*.1)*6),ctx.restore())}),particles.forEach(e=>{ctx.save(),ctx.globalAlpha=Math.max(0,e.alpha),ctx.fillStyle=e.color,ctx.shadowColor=e.color,ctx.shadowBlur=8,ctx.beginPath(),ctx.arc(e.x,e.y,e.size,0,Math.PI*2),ctx.fill(),ctx.restore()});const o=SKINS.find(e=>e.id===currentSkinId)||SKINS[0];ctx.save(),ctx.translate(bird.x,bird.y),ctx.rotate(bird.rotation),ctx.shadowColor=o.trailColor,ctx.shadowBlur=20,ctx.fillStyle=o.color,ctx.beginPath(),ctx.arc(0,0,bird.radius,0,Math.PI*2),ctx.fill();const n=Math.sin(frame*.3)*6;ctx.fillStyle="rgba(255, 255, 255, 0.4)",ctx.beginPath(),ctx.ellipse(-6,n,10,6,Math.PI/4,0,Math.PI*2),ctx.fill(),ctx.fillStyle="#fff",ctx.beginPath(),ctx.arc(8,-6,6,0,Math.PI*2),ctx.fill(),ctx.fillStyle="#000",ctx.beginPath(),ctx.arc(10,-6,3,0,Math.PI*2),ctx.fill(),ctx.fillStyle="#ff7700",ctx.beginPath(),ctx.moveTo(14,-2),ctx.lineTo(24,2),ctx.lineTo(14,6),ctx.closePath(),ctx.fill(),o.id==="golden"?(ctx.font="16px sans-serif",ctx.fillText("👑",-6,-18)):o.id==="cyber"?(ctx.strokeStyle="#00f3ff",ctx.lineWidth=2,ctx.strokeRect(-12,-12,24,24)):o.id==="sovereign"&&(ctx.font="14px sans-serif",ctx.fillText("💎",-6,-18)),ctx.restore(),ctx.fillStyle="#14142d",ctx.fillRect(0,H-15,W,15),ctx.fillStyle="#00f3ff",ctx.fillRect(0,H-15,W,2),ctx.restore()}function gameLoop(){update(),render(),requestAnimationFrame(gameLoop)}requestAnimationFrame(gameLoop),window.addEventListener("keydown",o=>{o.code==="Space"&&(o.preventDefault(),jump())}),canvas.addEventListener("pointerdown",o=>{o.preventDefault(),jump()}),document.getElementById("btnPlay").onclick=startGame,document.getElementById("btnRestart").onclick=startGame,document.getElementById("btnSound").onclick=()=>{sound.muted=!sound.muted,document.getElementById("btnSound").innerText=sound.muted?"🔇":"🔊"};function renderShop(){const o=document.getElementById("shopItemsContainer");o.innerHTML="",SKINS.forEach(n=>{const e=document.createElement("div");e.className=`skin-card ${n.id===currentSkinId?"active":""}`,e.innerHTML=`
+<div class="skin-icon">${n.icon}</div>
+<div class="skin-name">${n.name}</div>
+<div class="skin-price">${n.unlocked?n.id===currentSkinId?"✓ ĐANG DÙNG":"ĐÃ MỞ KHÓA":typeof n.price=="number"?`🟡 ${n.price}`:n.price}</div>
+`,e.onclick=()=>{n.unlocked?(currentSkinId=n.id,saveState(),document.getElementById("selectedSkinPreview").innerText=n.icon,renderShop()):typeof n.price=="number"&&coins>=n.price?(coins-=n.price,n.unlocked=!0,currentSkinId=n.id,sound.playCoin(),saveState(),renderShop()):(sound.playCrash(),alert(typeof n.price=="number"?`Bạn cần ${n.price} Coins! Hãy nhặt thêm coin trong game.`:"Hãy bấm vào nút WEB3 CRYPTO để mở khóa skin này!"))},o.appendChild(e)})}const shopScreen=document.getElementById("shopScreen");document.getElementById("btnShop").onclick=()=>{shopScreen.classList.remove("hidden"),renderShop()},document.getElementById("btnOpenShop").onclick=()=>{shopScreen.classList.remove("hidden"),renderShop()},document.getElementById("btnCloseShop").onclick=()=>{shopScreen.classList.add("hidden")};async function loadLeaderboard(){const o=document.getElementById("boardListContainer");o.innerHTML='<div style="text-align:center; padding:20px; color:#888;">Đang tải dữ liệu...</div>';const n=window.location.origin.includes("github.io")?"https://improve-concepts-trader-passive.trycloudflare.com":"";let e=[];try{const i=await fetch(n+"/api/leaderboard");i.ok&&(e=await i.json())}catch{e=[{rank:1,name:"CyberNinja",score:142,skin:"Void Specter",country:"VN"},{rank:2,name:"Satoshi_99",score:118,skin:"Sovereign Agent",country:"US"},{rank:3,name:"PhoenixKing",score:95,skin:"Dragon Flame",country:"JP"},{rank:4,name:"FlapMaster",score:78,skin:"Golden Phoenix",country:"KR"},{rank:5,name:"NeonRider",score:64,skin:"Cyber Neon",country:"SG"}]}o.innerHTML="",e.slice(0,10).forEach(i=>{const a=document.createElement("div");a.className="board-item",a.innerHTML=`
+<div style="display:flex; align-items:center; gap:8px;">
+<span class="board-rank ${i.rank<=3?"top"+i.rank:""}">#${i.rank}</span>
+<span style="font-weight:700;">${i.name}</span>
+<span style="font-size:11px; color:#888;">[${i.country||"VN"}]</span>
+</div>
+<span class="board-score">${i.score} pts</span>
+`,o.appendChild(a)})}const leaderboardScreen=document.getElementById("leaderboardScreen");document.getElementById("btnLeaderboard").onclick=()=>{leaderboardScreen.classList.remove("hidden"),loadLeaderboard()},document.getElementById("btnCloseLeaderboard").onclick=()=>{leaderboardScreen.classList.add("hidden")},document.getElementById("btnSubmitScore").onclick=async()=>{const o=document.getElementById("playerNameInput").value.trim()||"Player_"+Math.floor(Math.random()*999),n=SKINS.find(i=>i.id===currentSkinId)||SKINS[0],e=window.location.origin.includes("github.io")?"https://improve-concepts-trader-passive.trycloudflare.com":"";try{await fetch(e+"/api/score",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:o,score,skin:n.name,country:"VN"})}),alert("🎉 Đã ghi danh lên Bảng Xếp Hạng Toàn Cầu thành công!"),document.getElementById("btnSubmitScore").disabled=!0}catch{alert("Đã lưu điểm offline thành công!")}};const web3Screen=document.getElementById("web3Screen");document.getElementById("btnOpenWeb3").onclick=()=>{web3Screen.classList.remove("hidden")},document.getElementById("btnCloseWeb3").onclick=()=>{web3Screen.classList.add("hidden")},document.getElementById("btnCopyWallet").onclick=()=>{navigator.clipboard.writeText("0x03533D3c88EF9a21FccEB5e98373d17fd07bE298"),alert("Đã sao chép địa chỉ ví: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298")},document.getElementById("btnConnectMetaMask").onclick=async()=>{if(typeof window.ethereum!="undefined")try{const o=await window.ethereum.request({method:"eth_requestAccounts"}),n=o[0];alert(`✅ Đã kết nối ví thành công!\nĐịa chỉ: ${n.slice(0,6)}...${n.slice(-4)}\nBạn có thể gửi $1 để nhận Skin Sovereign Agent!`)}catch(o){alert("Kết nối ví bị từ chối hoặc có lỗi: "+o.message)}else alert("Vui lòng cài đặt tiện ích MetaMask hoặc mở trên trình duyệt Web3!")};const statsScreen=document.getElementById("statsScreen");document.getElementById("btnStats").onclick=()=>{statsScreen.classList.remove("hidden")},document.getElementById("btnOpenStats").onclick=()=>{statsScreen.classList.remove("hidden")},document.getElementById("btnCloseStats").onclick=()=>{statsScreen.classList.add("hidden")};async function detectCountry(){try{const o=await fetch("https://api.country.is/");if(o.ok){const n=await o.json(),e=n.country||"VN",i={VN:"🇻🇳 Việt Nam",US:"🇺🇸 Hoa Kỳ",JP:"🇯🇵 Nhật Bản",KR:"🇰🇷 Hàn Quốc",CN:"🇨🇳 Trung Quốc",GB:"🇬🇧 Vương Quốc Anh",DE:"🇩🇪 Đức",FR:"🇫🇷 Pháp",SG:"🇸🇬 Singapore"};document.getElementById("userDetectedCountry").innerText=i[e]||`🌐 Quốc gia (${e})`}}catch{document.getElementById("userDetectedCountry").innerText="🇻🇳 Việt Nam (Mặc định)"}}detectCountry();const arcadeScreen=document.getElementById("arcadeScreen");document.getElementById("btnArcade").onclick=()=>{arcadeScreen.classList.remove("hidden")},document.getElementById("btnOpenArcade").onclick=()=>{arcadeScreen.classList.remove("hidden")},document.getElementById("btnCloseArcade").onclick=()=>{arcadeScreen.classList.add("hidden")},document.getElementById("btnLaunchSnake").onclick=()=>{window.location.href="snake.html"};const shareScreen=document.getElementById("shareScreen");const openShare=()=>{const o=document.getElementById("playerNameInput").value.trim()||"Player",n=`https://tinyurl.com/flappybird-pro?ref=${encodeURIComponent(o)}&score=${score}`;document.getElementById("shareLinkDisplay").innerText=n,shareScreen.classList.remove("hidden")};document.getElementById("btnShareScore").onclick=openShare,document.getElementById("btnCloseShare").onclick=()=>{shareScreen.classList.add("hidden")},document.getElementById("btnCopyShareLink").onclick=()=>{const o=document.getElementById("shareLinkDisplay").innerText;navigator.clipboard.writeText(o),coins+=20,saveState(),sound.playCoin(),alert("🎉 Đã sao chép link chia sẻ!\nBạn được thưởng +20 Coins vào tài khoản!")},document.getElementById("btnShareTelegram").onclick=()=>{const o=encodeURIComponent(`🎮 Tôi vừa đạt ${score} điểm trong Flappy Bird Web3 Neon! Ai vượt được kỷ lục của tôi không? Chơi ngay tại: https://tinyurl.com/flappybird-pro`);window.open(`https://t.me/share/url?url=https://tinyurl.com/flappybird-pro&text=${o}`,"_blank")},document.getElementById("btnShareFacebook").onclick=()=>{window.open("https://www.facebook.com/sharer/sharer.php?u=https://tinyurl.com/flappybird-pro","_blank")},document.getElementById("btnShareTwitter").onclick=()=>{const o=encodeURIComponent(`Tôi vừa đạt ${score} điểm trong Flappy Bird Web3 Neon! Chơi ngay: https://tinyurl.com/flappybird-pro #FlappyBird #Web3 #Gaming`);window.open(`https://twitter.com/intent/tweet?text=${o}`,"_blank")};const langScreen=document.getElementById("langScreen"),openLang=()=>{langScreen.classList.remove("hidden")},closeLang=()=>{langScreen.classList.add("hidden")};document.getElementById("btnLang").onclick=openLang,document.getElementById("btnOpenLang").onclick=openLang,document.getElementById("btnCloseLang").onclick=closeLang,document.querySelectorAll(".lang-opt").forEach(o=>{o.onclick=()=>{setLanguage(o.getAttribute("data-lang")),closeLang()}}),applyTranslations(),saveState();</script>
 </body>
 </html>
