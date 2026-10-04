@@ -191,6 +191,27 @@
       background: rgba(0, 255, 170, 0.4);
       transform: scale(0.95);
     }
+
+    .lang-opt {
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .lang-opt:hover, .lang-opt.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary);
+      background: rgba(0, 255, 170, 0.15);
+    }
   </style>
 </head>
 <body>
@@ -204,6 +225,7 @@
         <div class="hud-stat" id="hudCrypto">🟡 <span>0 BTC</span></div>
       </div>
       <div class="hud-controls">
+        <button class="icon-btn" id="btnLang" title="Language / Ngôn Ngữ">🌐</button>
         <button class="icon-btn" id="btnSound" title="Âm Thanh">🔊</button>
         <button class="icon-btn" id="btnBackFlappy" title="Về Flappy Bird">🐥</button>
       </div>
@@ -229,6 +251,7 @@
       <div style="font-size:54px; margin-bottom: 24px;">🐍</div>
       <button class="btn" id="btnPlay">CHƠI NGAY (ARROW/SWIPE)</button>
       <button class="btn btn-secondary" id="btnGoFlappy">🐥 CHƠI FLAPPY BIRD</button>
+      <button class="btn" id="btnOpenLang" style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.3); font-size:13px; padding:10px; width:240px; color:#fff;">🌐 LANGUAGE / NGÔN NGỮ</button>
       <button class="btn btn-web3" id="btnOpenWeb3">⚡ WEB3 TIỀN ĐIỆN TỬ</button>
       <p style="font-size: 11px; color: #888; margin-top: 16px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
     </div>
@@ -243,6 +266,25 @@
       </div>
       <button class="btn" id="btnRestart">CHƠI LẠI</button>
       <button class="btn btn-secondary" id="btnBackMenu">MENU CHÍNH</button>
+    </div>
+
+    <!-- Language Selection Screen -->
+    <div class="overlay-screen hidden" id="langScreen" style="z-index: 35;">
+      <h1 class="title" id="txtLangTitle" style="font-size:24px;">🌐 CHỌN NGÔN NGỮ</h1>
+      <p class="subtitle" id="txtLangSubtitle" style="margin-bottom:16px;">SELECT YOUR LANGUAGE / 选择语言</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; max-height:420px; overflow-y:auto; padding:4px;" id="langGrid">
+        <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+        <button class="lang-opt" data-lang="vi">🇻🇳 Tiếng Việt</button>
+        <button class="lang-opt" data-lang="zh">🇨🇳 简体中文</button>
+        <button class="lang-opt" data-lang="ja">🇯🇵 日本語</button>
+        <button class="lang-opt" data-lang="ko">🇰🇷 한국어</button>
+        <button class="lang-opt" data-lang="ru">🇷🇺 Русский</button>
+        <button class="lang-opt" data-lang="fr">🇫🇷 Français</button>
+        <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+        <button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
+        <button class="lang-opt" data-lang="pt">🇧🇷 Português</button>
+      </div>
+      <button class="btn btn-secondary" id="btnCloseLang" style="margin-top:16px;">ĐÓNG / CLOSE</button>
     </div>
 
     <!-- Web3 Modal -->
@@ -305,6 +347,320 @@
       }
     }
     const sound = new SoundFX();
+
+    // ─── Internationalization (i18n) Engine (10 Languages) ───
+    const I18N = {
+      "en": {
+        "title": "CYBER SNAKE",
+        "subtitle": "NEON CRYPTO EDITION • WEB3 ARCADE",
+        "play": "PLAY NOW (ARROW/SWIPE)",
+        "go_flappy": "🐥 PLAY FLAPPY BIRD",
+        "web3_btn": "⚡ WEB3 CRYPTO",
+        "game_over": "GAME OVER",
+        "score": "SCORE",
+        "record": "HIGH SCORE:",
+        "replay": "REPLAY",
+        "main_menu": "MAIN MENU",
+        "agent_evm": "Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 CRYPTO",
+        "web3_subtitle": "SUPPORT AUTONOMOUS AI AGENT",
+        "wallet_label": "AGENT EVM WALLET ADDRESS (Base/Polygon/EVM):",
+        "copy_addr": "📋 COPY ADDRESS",
+        "web3_notice": "Supports: USDT, USDC, ETH on ultra-low gas fee Layer-2 networks.",
+        "connect_mm": "⚡ CONNECT METAMASK ($1 DONATE)",
+        "close": "CLOSE",
+        "lang_title": "🌐 SELECT LANGUAGE / 选择语言",
+        "alert_addr_copied": "Copied wallet address: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "SWIPE"
+      },
+      "vi": {
+        "title": "CYBER SNAKE",
+        "subtitle": "NEON CRYPTO EDITION • WEB3 ARCADE",
+        "play": "CHƠI NGAY (ARROW/SWIPE)",
+        "go_flappy": "🐥 CHƠI FLAPPY BIRD",
+        "web3_btn": "⚡ WEB3 TIỀN ĐIỆN TỬ",
+        "game_over": "GAME OVER",
+        "score": "ĐIỂM SỐ",
+        "record": "KỶ LỤC:",
+        "replay": "CHƠI LẠI",
+        "main_menu": "MENU CHÍNH",
+        "agent_evm": "Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 TIỀN ĐIỆN TỬ",
+        "web3_subtitle": "ỦNG HỘ TÁC NHÂN AI TỰ TRỊ",
+        "wallet_label": "ĐỊA CHỈ VÍ EVM CỦA AGENT (Base/Polygon/EVM):",
+        "copy_addr": "📋 SAO CHÉP ĐỊA CHỈ",
+        "web3_notice": "Hỗ trợ: USDT, USDC, ETH trên các mạng Layer-2 phí cực rẻ.",
+        "connect_mm": "⚡ KẾT NỐI METAMASK ($1 ỦNG HỘ)",
+        "close": "ĐÓNG",
+        "lang_title": "🌐 CHỌN NGÔN NGỮ / LANGUAGE",
+        "alert_addr_copied": "Đã sao chép địa chỉ ví: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "VUỐT"
+      },
+      "zh": {
+        "title": "赛博贪吃蛇",
+        "subtitle": "霓虹加密版 • WEB3 街机",
+        "play": "立即开始 (按键/滑动)",
+        "go_flappy": "🐥 玩像素飞鸟",
+        "web3_btn": "⚡ WEB3 加密赞助",
+        "game_over": "游戏结束",
+        "score": "得分",
+        "record": "最高纪录:",
+        "replay": "再玩一次",
+        "main_menu": "主菜单",
+        "agent_evm": "智能体 EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 加密货币",
+        "web3_subtitle": "支持自主 AI 智能体发展",
+        "wallet_label": "智能体 EVM 钱包地址 (Base/Polygon/EVM):",
+        "copy_addr": "📋 复制地址",
+        "web3_notice": "支持：USDT、USDC、ETH，二层网络超低 Gas 费。",
+        "connect_mm": "⚡ 连接 METAMASK (1美元支持)",
+        "close": "关闭",
+        "lang_title": "🌐 切换语言 / LANGUAGE",
+        "alert_addr_copied": "已复制钱包地址：0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "滑动"
+      },
+      "ja": {
+        "title": "サイバースネーク",
+        "subtitle": "ネオン暗号版 • WEB3 アーケード",
+        "play": "今すぐプレイ (矢印/スワイプ)",
+        "go_flappy": "🐥 フラッピーバードを遊ぶ",
+        "web3_btn": "⚡ WEB3 暗号寄付",
+        "game_over": "ゲームオーバー",
+        "score": "スコア",
+        "record": "ハイスコア:",
+        "replay": "もう一度プレイ",
+        "main_menu": "メインメニュー",
+        "agent_evm": "エージェント EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 暗号資産",
+        "web3_subtitle": "自律型 AI エージェントを支援",
+        "wallet_label": "エージェント EVM アドレス (Base/Polygon/EVM):",
+        "copy_addr": "📋 アドレスをコピー",
+        "web3_notice": "対応：USDT、USDC、ETH（格安ガス代の Layer-2）",
+        "connect_mm": "⚡ METAMASK 接続 ($1 寄付)",
+        "close": "閉じる",
+        "lang_title": "🌐 言語選択 / LANGUAGE",
+        "alert_addr_copied": "ウォレットアドレスをコピーしました：0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "スワイプ"
+      },
+      "ko": {
+        "title": "사이버 스네이크",
+        "subtitle": "네온 크립토 에디션 • WEB3 아케이드",
+        "play": "지금 플레이 (방향키/스와이프)",
+        "go_flappy": "🐥 플래피 버드 플레이",
+        "web3_btn": "⚡ WEB3 후원",
+        "game_over": "게임 오버",
+        "score": "점수",
+        "record": "최고 기록:",
+        "replay": "다시하기",
+        "main_menu": "메인 메뉴",
+        "agent_evm": "에이전트 EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 암호화폐",
+        "web3_subtitle": "자율 AI 에이전트 후원하기",
+        "wallet_label": "에이전트 EVM 지갑 주소 (Base/Polygon/EVM):",
+        "copy_addr": "📋 지갑 주소 복사",
+        "web3_notice": "지원: USDT, USDC, ETH (초저렴 수수료 Layer-2 네트워크)",
+        "connect_mm": "⚡ 메타마스크 연결 ($1 후원)",
+        "close": "닫기",
+        "lang_title": "🌐 언어 선택 / LANGUAGE",
+        "alert_addr_copied": "지갑 주소 복사 완료: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "스와이프"
+      },
+      "ru": {
+        "title": "CYBER SNAKE",
+        "subtitle": "НЕОН КРИПТО • WEB3 АРКАДА",
+        "play": "ИГРАТЬ (СТРЕЛКИ/СВАЙП)",
+        "go_flappy": "🐥 ИГРАТЬ В FLAPPY BIRD",
+        "web3_btn": "⚡ WEB3 КРИПТА",
+        "game_over": "ИГРА ОКОНЧЕНА",
+        "score": "СЧЕТ",
+        "record": "РЕКОРД:",
+        "replay": "ЗАНОВО",
+        "main_menu": "ГЛАВНОЕ МЕНЮ",
+        "agent_evm": "Агент EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 КРИПТОВАЛЮТА",
+        "web3_subtitle": "ПОДДЕРЖАТЬ АВТОНОМНОГО AI АГЕНТА",
+        "wallet_label": "EVM АДРЕС АГЕНТА (Base/Polygon/EVM):",
+        "copy_addr": "📋 СКОПИРОВАТЬ АДРЕС",
+        "web3_notice": "Поддерживает: USDT, USDC, ETH в сетях Layer-2 с низкими комиссиями.",
+        "connect_mm": "⚡ METAMASK ($1 ПОДДЕРЖКА)",
+        "close": "ЗАКРЫТЬ",
+        "lang_title": "🌐 ВЫБОР ЯЗЫКА / LANGUAGE",
+        "alert_addr_copied": "Адрес кошелька скопирован: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "СВАЙП"
+      },
+      "fr": {
+        "title": "CYBER SNAKE",
+        "subtitle": "ÉDITION NÉON CRYPTO • ARCADE WEB3",
+        "play": "JOUER (TOUCHES/GLISSER)",
+        "go_flappy": "🐥 JOUER À FLAPPY BIRD",
+        "web3_btn": "⚡ CRYPTO WEB3",
+        "game_over": "GAME OVER",
+        "score": "SCORE",
+        "record": "MEILLEUR SCORE:",
+        "replay": "REJOUER",
+        "main_menu": "MENU PRINCIPAL",
+        "agent_evm": "Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "CRYPTO WEB3",
+        "web3_subtitle": "SOUTENIR L'AGENT IA AUTONOME",
+        "wallet_label": "ADRESSE EVM DE L'AGENT (Base/Polygon/EVM):",
+        "copy_addr": "📋 COPIER L'ADRESSE",
+        "web3_notice": "Prend en charge : USDT, USDC, ETH sur les réseaux Layer-2 à faibles frais.",
+        "connect_mm": "⚡ CONNECTER METAMASK ($1 SOUTIEN)",
+        "close": "FERMER",
+        "lang_title": "🌐 CHOISIR LA LANGUE / LANGUAGE",
+        "alert_addr_copied": "Adresse copiée : 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "GLISSER"
+      },
+      "es": {
+        "title": "CYBER SNAKE",
+        "subtitle": "EDICIÓN NEÓN CRIPTO • WEB3 ARCADE",
+        "play": "JUGAR AHORA (FLECHAS/SWIPE)",
+        "go_flappy": "🐥 JUGAR FLAPPY BIRD",
+        "web3_btn": "⚡ CRIPTO WEB3",
+        "game_over": "JUEGO TERMINADO",
+        "score": "PUNTOS",
+        "record": "RÉCORD:",
+        "replay": "REINTENTAR",
+        "main_menu": "MENÚ PRINCIPAL",
+        "agent_evm": "Agente EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 CRIPTO",
+        "web3_subtitle": "APOYA AL AGENTE IA AUTÓNOMO",
+        "wallet_label": "DIRECCIÓN EVM DEL AGENTE (Base/Polygon/EVM):",
+        "copy_addr": "📋 COPIAR DIRECCIÓN",
+        "web3_notice": "Compatible con: USDT, USDC, ETH en redes Layer-2 con tarifas mínimas.",
+        "connect_mm": "⚡ CONECTAR METAMASK ($1 APOYO)",
+        "close": "CERRAR",
+        "lang_title": "🌐 SELECCIONAR IDIOMA / LANGUAGE",
+        "alert_addr_copied": "Dirección copiada: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "DESLIZAR"
+      },
+      "de": {
+        "title": "CYBER SNAKE",
+        "subtitle": "NEON KRYPTO EDITION • WEB3 ARCADE",
+        "play": "JETZT SPIELEN (PFEILE/WISCHEN)",
+        "go_flappy": "🐥 FLAPPY BIRD SPIELEN",
+        "web3_btn": "⚡ WEB3 KRYPTO",
+        "game_over": "SPIEL VORBEI",
+        "score": "PUNKTE",
+        "record": "REKORD:",
+        "replay": "ERNEUT SPIELEN",
+        "main_menu": "HAUPTMENÜ",
+        "agent_evm": "Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "WEB3 KRYPTO",
+        "web3_subtitle": "AUTONOMEN KI-AGENTEN UNTERSTÜTZEN",
+        "wallet_label": "EVM-ADRESSE DES AGENTEN (Base/Polygon/EVM):",
+        "copy_addr": "📋 ADRESSE KOPIEREN",
+        "web3_notice": "Unterstützt: USDT, USDC, ETH auf extrem günstigen Layer-2-Netzwerken.",
+        "connect_mm": "⚡ METAMASK VERBINDEN ($1 SPENDE)",
+        "close": "SCHLIESSEN",
+        "lang_title": "🌐 SPRACHE WÄHLEN / LANGUAGE",
+        "alert_addr_copied": "Adresse kopiert: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "WISCHEN"
+      },
+      "pt": {
+        "title": "CYBER SNAKE",
+        "subtitle": "EDIÇÃO NEON CRIPTO • ARCADE WEB3",
+        "play": "JOGAR AGORA (SETAS/SWIPE)",
+        "go_flappy": "🐥 JOGAR FLAPPY BIRD",
+        "web3_btn": "⚡ CRIPTO WEB3",
+        "game_over": "FIM DE JOGO",
+        "score": "PONTUAÇÃO",
+        "record": "RECORDE:",
+        "replay": "JOGAR NOVAMENTE",
+        "main_menu": "MENU PRINCIPAL",
+        "agent_evm": "Agente EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "web3_title": "CRIPTO WEB3",
+        "web3_subtitle": "APOIAR AGENTE IA AUTÔNOMO",
+        "wallet_label": "ENDEREÇO EVM DO AGENTE (Base/Polygon/EVM):",
+        "copy_addr": "📋 COPIAR ENDEREÇO",
+        "web3_notice": "Suporta: USDT, USDC, ETH em redes Layer-2 com taxas mínimas.",
+        "connect_mm": "⚡ CONECTAR METAMASK ($1 APOIAR)",
+        "close": "FECHAR",
+        "lang_title": "🌐 SELECIONAR IDIOMA / LANGUAGE",
+        "alert_addr_copied": "Endereço copiado: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298",
+        "dpad_hint": "DESLIZAR"
+      }
+    };
+
+    let currentLang = localStorage.getItem('game_lang');
+    if (!currentLang || !I18N[currentLang]) {
+      const navLang = (navigator.language || 'en').slice(0, 2).toLowerCase();
+      currentLang = I18N[navLang] ? navLang : 'en';
+    }
+
+    function t(key, params = {}) {
+      const dict = I18N[currentLang] || I18N['en'];
+      let str = dict[key] || (I18N['en'] && I18N['en'][key]) || key;
+      for (const p in params) {
+        str = str.replace('{' + p + '}', params[p]);
+      }
+      return str;
+    }
+
+    function applyTranslations() {
+      document.documentElement.lang = currentLang;
+
+      // Start Screen
+      const startScreen = document.getElementById('startScreen');
+      if (startScreen) {
+        startScreen.querySelector('.title').innerText = t('title');
+        startScreen.querySelector('.subtitle').innerText = t('subtitle');
+        document.getElementById('btnPlay').innerText = t('play');
+        document.getElementById('btnGoFlappy').innerText = t('go_flappy');
+        document.getElementById('btnOpenWeb3').innerText = t('web3_btn');
+      }
+
+      // Game Over Screen
+      const gameOverScreen = document.getElementById('gameOverScreen');
+      if (gameOverScreen) {
+        gameOverScreen.querySelector('.title').innerText = t('game_over');
+        const scoreLabel = gameOverScreen.querySelector('div[style*="font-size:14px; color:#aaa;"]');
+        if (scoreLabel) scoreLabel.innerText = t('score');
+        const recDiv = gameOverScreen.querySelector('div[style*="font-size:13px; color:var(--accent);"]');
+        if (recDiv) {
+          recDiv.childNodes[0].nodeValue = t('record') + ' ';
+        }
+        document.getElementById('btnRestart').innerText = t('replay');
+        document.getElementById('btnBackMenu').innerText = t('main_menu');
+      }
+
+      // Web3 Screen
+      const web3Screen = document.getElementById('web3Screen');
+      if (web3Screen) {
+        web3Screen.querySelector('.title').innerText = t('web3_title');
+        web3Screen.querySelector('.subtitle').innerText = t('web3_subtitle');
+        const wlabel = web3Screen.querySelector('div[style*="font-size:12px; color:#aaa;"]');
+        if (wlabel) wlabel.innerText = t('wallet_label');
+        document.getElementById('btnCopyWallet').innerText = t('copy_addr');
+        const wnotice = web3Screen.querySelector('div[style*="font-size:11px; color:#888;"]');
+        if (wnotice) wnotice.innerText = t('web3_notice');
+        document.getElementById('btnCloseWeb3').innerText = t('close');
+      }
+
+      // Language Screen
+      const langScreen = document.getElementById('langScreen');
+      if (langScreen) {
+        document.getElementById('txtLangTitle').innerText = t('lang_title');
+        document.getElementById('btnCloseLang').innerText = t('close');
+        document.querySelectorAll('.lang-opt').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
+        });
+      }
+
+      // HUD & D-Pad hints
+      const btnLang = document.getElementById('btnLang');
+      if (btnLang) btnLang.title = `Language (${currentLang.toUpperCase()})`;
+      const dpadCenter = document.querySelector('.d-pad div[style*="font-size:9px;"]');
+      if (dpadCenter) dpadCenter.innerText = t('dpad_hint');
+    }
+
+    function setLanguage(lang) {
+      if (I18N[lang]) {
+        currentLang = lang;
+        localStorage.setItem('game_lang', currentLang);
+        applyTranslations();
+      }
+    }
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -487,6 +843,23 @@
       render();
       requestAnimationFrame(gameLoop);
     }
+
+    // Language Modal Listeners
+    const langScreen = document.getElementById('langScreen');
+    const openLang = () => { langScreen.classList.remove('hidden'); };
+    const closeLang = () => { langScreen.classList.add('hidden'); };
+    document.getElementById('btnLang').onclick = openLang;
+    document.getElementById('btnOpenLang').onclick = openLang;
+    document.getElementById('btnCloseLang').onclick = closeLang;
+    document.querySelectorAll('.lang-opt').forEach(btn => {
+      btn.onclick = () => {
+        setLanguage(btn.getAttribute('data-lang'));
+        closeLang();
+      };
+    });
+
+    applyTranslations();
+    // Game Loop
     requestAnimationFrame(gameLoop);
 
     document.getElementById('btnPlay').onclick = () => {
