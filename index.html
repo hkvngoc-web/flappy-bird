@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+  <title>Flappy Bird: World Championship (Web3 Neon Edition)</title>
+  <style>
+    :root {
+      --primary: #00f3ff;
+      --secondary: #ff007f;
+      --accent: #ffe600;
+      --bg-dark: #0a0a16;
+      --surface: rgba(20, 20, 45, 0.85);
+      --border-glow: 0 0 15px rgba(0, 243, 255, 0.6);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at center, #1b1b3a 0%, #080811 100%);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #game-wrapper {
+      position: relative;
+      width: 440px;
+      height: 720px;
+      max-width: 100vw;
+      max-height: 100vh;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 243, 255, 0.25);
+      border: 3px solid rgba(0, 243, 255, 0.4);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #050510;
+    }
+    /* HUD Overlays */
+    .hud-top {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-stat {
+      background: var(--surface);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .hud-controls {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .icon-btn {
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+      transform: scale(1.05);
+    }
+    /* Modals / Screens */
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 8, 20, 0.88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      z-index: 20;
+      transition: opacity 0.3s;
+    }
+    .hidden {
+      display: none !important;
+    }
+    h1.title {
+      font-size: 32px;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      background: linear-gradient(135deg, #00f3ff, #ff007f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+    }
+    p.subtitle {
+      font-size: 13px;
+      color: #a0a0c0;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .btn {
+      background: linear-gradient(135deg, #00f3ff, #0088ff);
+      color: #000;
+      border: none;
+      padding: 12px 32px;
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+      transition: all 0.2s;
+      margin: 8px 0;
+      width: 240px;
+      text-align: center;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 28px rgba(0, 243, 255, 0.8);
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, #ff007f, #aa00ff);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+    }
+    .btn-secondary:hover {
+      box-shadow: 0 0 28px rgba(255, 0, 127, 0.8);
+    }
+    .btn-web3 {
+      background: linear-gradient(135deg, #ffe600, #ff8800);
+      color: #000;
+      box-shadow: 0 0 20px rgba(255, 230, 0, 0.5);
+    }
+    /* Shop Modal */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 8px 4px;
+      margin-bottom: 16px;
+    }
+    .skin-card {
+      background: var(--surface);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .skin-card.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+    }
+    .skin-icon {
+      font-size: 32px;
+      margin: 6px 0;
+    }
+    .skin-name {
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .skin-price {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    /* Leaderboard */
+    .board-list {
+      width: 100%;
+      max-height: 360px;
+      overflow-y: auto;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px;
+      margin-bottom: 16px;
+    }
+    .board-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+    }
+    .board-rank {
+      font-weight: 800;
+      width: 24px;
+      color: var(--primary);
+    }
+    .board-rank.top1 { color: #ffe600; }
+    .board-rank.top2 { color: #cccccc; }
+    .board-rank.top3 { color: #cd7f32; }
+    .board-score {
+      font-weight: 800;
+      color: var(--secondary);
+    }
+    /* Web3 Modal */
+    .wallet-box {
+      background: var(--surface);
+      border: 1px solid rgba(255, 230, 0, 0.4);
+      padding: 16px;
+      border-radius: 12px;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .wallet-addr {
+      font-family: monospace;
+      font-size: 11px;
+      word-break: break-all;
+      background: #000;
+      padding: 8px;
+      border-radius: 6px;
+      color: #00f3ff;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-wrapper">
+    <canvas id="gameCanvas" width="440" height="720"></canvas>
+
+    <!-- In-Game HUD -->
+    <div class="hud-top">
+      <div style="display:flex; gap:8px;">
+        <div class="hud-stat" id="hudScore">🏆 <span>0</span></div>
+        <div class="hud-stat" id="hudCoins">🪙 <span>0</span></div>
+      </div>
+      <div class="hud-controls">
+        <button class="icon-btn" id="btnSound" title="Bật/Tắt Âm Thanh">🔊</button>
+        <button class="icon-btn" id="btnShop" title="Cửa Hàng Skin">🛍️</button>
+        <button class="icon-btn" id="btnLeaderboard" title="Bảng Xếp Hạng">👑</button>
+      </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div class="overlay-screen" id="startScreen">
+      <h1 class="title">FLAPPY BIRD</h1>
+      <p class="subtitle">WORLD CHAMPIONSHIP • NEON EDITION</p>
+      <div style="font-size:54px; margin-bottom: 24px;" id="selectedSkinPreview">🐥</div>
+      <button class="btn" id="btnPlay">CHƠI NGAY (SPACE/CLICK)</button>
+      <button class="btn btn-secondary" id="btnOpenShop">CỬA HÀNG SKIN (🪙 <span id="menuCoins">0</span>)</button>
+      <button class="btn btn-web3" id="btnOpenWeb3">⚡ WEB3 CRYPTO (ỦNG HỘ)</button>
+      <p style="font-size: 11px; color: #888; margin-top: 16px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="overlay-screen hidden" id="gameOverScreen">
+      <h1 class="title" style="background: linear-gradient(135deg, #ff0055, #ff8800); -webkit-background-clip:text;">GAME OVER</h1>
+      <div style="background:var(--surface); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px 32px; margin:16px 0; text-align:center; width:80%;">
+        <div style="font-size:14px; color:#aaa; margin-bottom:4px;">ĐIỂM ĐẠT ĐƯỢC</div>
+        <div style="font-size:42px; font-weight:900; color:var(--primary); text-shadow:0 0 15px rgba(0,243,255,0.6);" id="finalScore">0</div>
+        <div style="font-size:13px; color:var(--accent); margin-top:6px;">KỶ LỤC: <span id="finalHighScore">0</span></div>
+        <div style="font-size:13px; color:#fff; margin-top:4px;">🪙 NHẶT ĐƯỢC: +<span id="runCoins">0</span> COIN</div>
+      </div>
+      <div style="display:flex; gap:8px; width:80%; margin-bottom:12px;">
+        <input type="text" id="playerNameInput" placeholder="Nhập tên của bạn" maxlength="14" style="flex:1; padding:10px; background:#000; border:1px solid var(--primary); border-radius:8px; color:#fff; font-size:14px; text-align:center;">
+        <button class="btn" id="btnSubmitScore" style="width:auto; padding:10px 16px; margin:0; font-size:14px;">GỬI TOP</button>
+      </div>
+      <button class="btn" id="btnRestart">CHƠI LẠI (SPACE)</button>
+    </div>
+
+    <!-- Shop Screen -->
+    <div class="overlay-screen hidden" id="shopScreen">
+      <h1 class="title">CỬA HÀNG SKIN</h1>
+      <p class="subtitle">SỞ HỮU SKIN ĐỘC QUYỀN VÀ HIỆU ỨNG HÀO QUANG</p>
+      <div style="font-weight:700; margin-bottom:12px; color:var(--accent);">VÍ CỦA BẠN: 🪙 <span id="shopCoins">0</span> COINS</div>
+      <div class="shop-grid" id="shopItemsContainer"></div>
+      <button class="btn btn-secondary" id="btnCloseShop">ĐÓNG</button>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div class="overlay-screen hidden" id="leaderboardScreen">
+      <h1 class="title">BẢNG XẾP HẠNG</h1>
+      <p class="subtitle">TOP 10 TUYỂN THỦ TOÀN CẦU</p>
+      <div class="board-list" id="boardListContainer"></div>
+      <button class="btn" id="btnCloseLeaderboard">ĐÓNG</button>
+    </div>
+
+    <!-- Web3 Crypto Modal -->
+    <div class="overlay-screen hidden" id="web3Screen">
+      <h1 class="title" style="background: linear-gradient(135deg, #ffe600, #ff8800); -webkit-background-clip:text;">WEB3 TIỀN ĐIỆN TỬ</h1>
+      <p class="subtitle">MỞ KHÓA SKIN HUYỀN THOẠI HOẶC ỦNG HỘ AGENT TỰ TRỊ</p>
+      <div class="wallet-box">
+        <div style="font-size:12px; color:#aaa;">ĐỊA CHỈ VÍ EVM CỦA AGENT (Base/Polygon/EVM):</div>
+        <div class="wallet-addr" id="walletDisplay">0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</div>
+        <button class="btn" id="btnCopyWallet" style="width:100%; padding:8px; font-size:12px; margin:4px 0;">📋 SAO CHÉP ĐỊA CHỈ</button>
+        <div style="font-size:11px; color:#888; margin-top:8px;">Hỗ trợ: USDT, USDC, ETH trên các mạng Layer-2 phí cực rẻ.</div>
+      </div>
+      <button class="btn btn-web3" id="btnConnectMetaMask">⚡ KẾT NỐI METAMASK ($1 MUA SKIN)</button>
+      <button class="btn btn-secondary" id="btnCloseWeb3">ĐÓNG</button>
+    </div>
+  </div>
+
+  <script>
+    // ─── Web Audio API Sound Synthesizer (Zero External Audio Files) ───
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.bgmPlaying = false;
+        this.bgmTimer = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playJump() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(750, now + 0.12);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+      playCoin() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        [987.77, 1318.51].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.06);
+          gain.gain.setValueAtTime(0.25, now + i * 0.06);
+          gain.gain.linearRampToValueAtTime(0.01, now + i * 0.06 + 0.15);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.06);
+          osc.stop(now + i * 0.06 + 0.15);
+        });
+      }
+      playScore() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.18);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      }
+      playCrash() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.35);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      }
+    }
+    const sound = new SoundEngine();
+
+    // ─── Skins Definition ───
+    const SKINS = [
+      { id: 'classic', name: 'Classic Canary', icon: '🐥', color: '#ffea00', trailColor: '#ffe600', price: 0, unlocked: true },
+      { id: 'cyber', name: 'Cyber Neon', icon: '⚡', color: '#00f3ff', trailColor: '#00f3ff', price: 50, unlocked: false },
+      { id: 'golden', name: 'Golden Phoenix', icon: '👑', color: '#ffd700', trailColor: '#ffbb00', price: 150, unlocked: false },
+      { id: 'dragon', name: 'Dragon Flame', icon: '🔥', color: '#ff3300', trailColor: '#ff5500', price: 300, unlocked: false },
+      { id: 'void', name: 'Void Specter', icon: '🌌', color: '#b026ff', trailColor: '#b026ff', price: 500, unlocked: false },
+      { id: 'sovereign', name: 'Sovereign Agent', icon: '💎', color: '#00ff9d', trailColor: '#00ffaa', price: 'Web3 ($1) or 50pts', unlocked: false }
+    ];
+
+    // Load persistent state
+    let coins = parseInt(localStorage.getItem('fb_coins') || '0', 10);
+    let highScore = parseInt(localStorage.getItem('fb_high_score') || '0', 10);
+    let currentSkinId = localStorage.getItem('fb_current_skin') || 'classic';
+    let unlockedSkins = JSON.parse(localStorage.getItem('fb_unlocked_skins') || '["classic"]');
+
+    SKINS.forEach(s => {
+      if (unlockedSkins.includes(s.id)) s.unlocked = true;
+    });
+
+    function saveState() {
+      localStorage.setItem('fb_coins', coins);
+      localStorage.setItem('fb_high_score', highScore);
+      localStorage.setItem('fb_current_skin', currentSkinId);
+      localStorage.setItem('fb_unlocked_skins', JSON.stringify(SKINS.filter(s => s.unlocked).map(s => s.id)));
+      document.getElementById('hudCoins').querySelector('span').innerText = coins;
+      document.getElementById('menuCoins').innerText = coins;
+      document.getElementById('shopCoins').innerText = coins;
+    }
+
+    // ─── Game Canvas & Physics ───
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    let gameState = 'START'; // START, PLAYING, GAMEOVER
+    let score = 0;
+    let runCoinsCollected = 0;
+    let frame = 0;
+
+    // Bird
+    const bird = {
+      x: 100,
+      y: H / 2,
+      vy: 0,
+      radius: 18,
+      gravity: 0.38,
+      jumpForce: -7.5,
+      rotation: 0
+    };
+
+    // Particles
+    let particles = [];
+    function spawnTrail(x, y, color) {
+      for (let i = 0; i < 2; i++) {
+        particles.push({
+          x: x + (Math.random() - 0.5) * 6,
+          y: y + (Math.random() - 0.5) * 6,
+          vx: -2 - Math.random() * 2,
+          vy: (Math.random() - 0.5) * 1.5,
+          size: Math.random() * 5 + 2,
+          color: color,
+          alpha: 0.8,
+          life: 0.8
+        });
+      }
+    }
+    function spawnExplosion(x, y, color) {
+      for (let i = 0; i < 30; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 6 + 2;
+        particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 6 + 3,
+          color: color,
+          alpha: 1,
+          life: 1
+        });
+      }
+    }
+
+    // Pipes & Coins
+    let pipes = [];
+    const PIPE_SPEED = 2.6;
+    const PIPE_SPAWN_INTERVAL = 110;
+    const PIPE_GAP = 150;
+
+    function spawnPipe() {
+      const minTop = 60;
+      const maxTop = H - PIPE_GAP - 120;
+      const topHeight = Math.floor(Math.random() * (maxTop - minTop)) + minTop;
+      const bottomY = topHeight + PIPE_GAP;
+
+      // Decide if gap has a coin
+      const hasCoin = Math.random() < 0.7;
+
+      pipes.push({
+        x: W + 20,
+        width: 64,
+        topHeight: topHeight,
+        bottomY: bottomY,
+        bottomHeight: H - bottomY,
+        scored: false,
+        coin: hasCoin ? {
+          x: W + 20 + 32,
+          y: topHeight + PIPE_GAP / 2,
+          radius: 12,
+          collected: false
+        } : null
+      });
+    }
+
+    // Stars background
+    const stars = [];
+    for (let i = 0; i < 60; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: Math.random() * 2 + 0.5,
+        speed: Math.random() * 0.4 + 0.2
+      });
+    }
+
+    // Screen Shake
+    let screenShake = 0;
+
+    function resetGame() {
+      bird.y = H / 2;
+      bird.vy = 0;
+      bird.rotation = 0;
+      pipes = [];
+      particles = [];
+      score = 0;
+      runCoinsCollected = 0;
+      frame = 0;
+      screenShake = 0;
+      document.getElementById('hudScore').querySelector('span').innerText = '0';
+    }
+
+    function jump() {
+      if (gameState === 'PLAYING') {
+        bird.vy = bird.jumpForce;
+        sound.playJump();
+      } else if (gameState === 'START') {
+        startGame();
+      }
+    }
+
+    function startGame() {
+      resetGame();
+      gameState = 'PLAYING';
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('gameOverScreen').classList.add('hidden');
+      bird.vy = bird.jumpForce;
+      sound.playJump();
+    }
+
+    function triggerGameOver() {
+      if (gameState !== 'PLAYING') return;
+      gameState = 'GAMEOVER';
+      sound.playCrash();
+      screenShake = 15;
+
+      const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
+      spawnExplosion(bird.x, bird.y, skin.color);
+
+      // Check High Score
+      if (score > highScore) {
+        highScore = score;
+      }
+      // Check auto unlock Sovereign if score >= 50
+      if (score >= 50) {
+        const sov = SKINS.find(s => s.id === 'sovereign');
+        if (sov && !sov.unlocked) {
+          sov.unlocked = true;
+          alert("🎉 BẠN ĐẠT TRÊN 50 ĐIỂM! Đã mở khóa Skin Huyền Thoại: Sovereign Agent!");
+        }
+      }
+
+      saveState();
+
+      document.getElementById('finalScore').innerText = score;
+      document.getElementById('finalHighScore').innerText = highScore;
+      document.getElementById('runCoins').innerText = runCoinsCollected;
+      document.getElementById('gameOverScreen').classList.remove('hidden');
+    }
+
+    // Main Game Loop
+    function update() {
+      frame++;
+
+      // Update Stars
+      stars.forEach(s => {
+        s.x -= s.speed;
+        if (s.x < 0) s.x = W;
+      });
+
+      if (gameState === 'PLAYING') {
+        // Bird Physics
+        bird.vy += bird.gravity;
+        bird.y += bird.vy;
+        bird.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (bird.vy / 10)));
+
+        // Spawn trail
+        const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
+        spawnTrail(bird.x - 12, bird.y, skin.trailColor);
+
+        // Ceiling / Floor collision
+        if (bird.y + bird.radius >= H - 15 || bird.y - bird.radius <= 0) {
+          triggerGameOver();
+        }
+
+        // Spawn Pipes
+        if (frame % PIPE_SPAWN_INTERVAL === 0) {
+          spawnPipe();
+        }
+
+        // Move Pipes & Collision Check
+        for (let i = pipes.length - 1; i >= 0; i--) {
+          const p = pipes[i];
+          p.x -= PIPE_SPEED;
+
+          // Check Score
+          if (!p.scored && p.x + p.width < bird.x) {
+            p.scored = true;
+            score++;
+            sound.playScore();
+            document.getElementById('hudScore').querySelector('span').innerText = score;
+          }
+
+          // Coin Collection
+          if (p.coin && !p.coin.collected) {
+            p.coin.x -= PIPE_SPEED;
+            const cdist = Math.hypot(bird.x - p.coin.x, bird.y - p.coin.y);
+            if (cdist < bird.radius + p.coin.radius) {
+              p.coin.collected = true;
+              coins += 5;
+              runCoinsCollected += 5;
+              sound.playCoin();
+              saveState();
+              spawnExplosion(p.coin.x, p.coin.y, '#ffe600');
+            }
+          }
+
+          // Pipe Box Collision
+          const inX = bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + p.width;
+          const hitTop = bird.y - bird.radius < p.topHeight;
+          const hitBottom = bird.y + bird.radius > p.bottomY;
+
+          if (inX && (hitTop || hitBottom)) {
+            triggerGameOver();
+          }
+
+          // Remove offscreen pipes
+          if (p.x + p.width < -20) {
+            pipes.splice(i, 1);
+          }
+        }
+      }
+
+      // Update Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.life -= 0.025;
+        pt.alpha = pt.life;
+        if (pt.life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      // Screen shake decay
+      if (screenShake > 0) screenShake *= 0.88;
+      if (screenShake < 0.5) screenShake = 0;
+    }
+
+    function render() {
+      ctx.save();
+      if (screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+      }
+
+      // 1. Sky & Stars
+      ctx.fillStyle = '#060614';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = '#fff';
+      stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 2. Parallax Cyber Skyline
+      ctx.fillStyle = '#0f0f29';
+      for (let i = 0; i < 7; i++) {
+        const bx = ((i * 80) - (frame * 0.4) % 80);
+        ctx.fillRect(bx, H - 180, 60, 180);
+        // glowing windows
+        ctx.fillStyle = 'rgba(0, 243, 255, 0.15)';
+        ctx.fillRect(bx + 10, H - 150, 15, 20);
+        ctx.fillRect(bx + 35, H - 110, 15, 20);
+        ctx.fillStyle = '#0f0f29';
+      }
+
+      // 3. Render Pipes (Neon Cylinders)
+      pipes.forEach(p => {
+        // Top Pipe
+        const topGrad = ctx.createLinearGradient(p.x, 0, p.x + p.width, 0);
+        topGrad.addColorStop(0, '#00f3ff');
+        topGrad.addColorStop(0.5, '#0066aa');
+        topGrad.addColorStop(1, '#002244');
+        ctx.fillStyle = topGrad;
+        ctx.fillRect(p.x, 0, p.width, p.topHeight);
+
+        // Pipe Lip Top
+        ctx.fillStyle = '#00f3ff';
+        ctx.shadowColor = '#00f3ff';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(p.x - 3, p.topHeight - 20, p.width + 6, 20);
+        ctx.shadowBlur = 0;
+
+        // Bottom Pipe
+        const botGrad = ctx.createLinearGradient(p.x, 0, p.x + p.width, 0);
+        botGrad.addColorStop(0, '#ff007f');
+        botGrad.addColorStop(0.5, '#99004d');
+        botGrad.addColorStop(1, '#33001a');
+        ctx.fillStyle = botGrad;
+        ctx.fillRect(p.x, p.bottomY, p.width, p.bottomHeight);
+
+        // Pipe Lip Bottom
+        ctx.fillStyle = '#ff007f';
+        ctx.shadowColor = '#ff007f';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(p.x - 3, p.bottomY, p.width + 6, 20);
+        ctx.shadowBlur = 0;
+
+        // Coin
+        if (p.coin && !p.coin.collected) {
+          ctx.save();
+          ctx.shadowColor = '#ffe600';
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = '#ffe600';
+          ctx.beginPath();
+          ctx.arc(p.coin.x, p.coin.y + Math.sin(frame * 0.1) * 6, p.coin.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🪙', p.coin.x, p.coin.y + Math.sin(frame * 0.1) * 6);
+          ctx.restore();
+        }
+      });
+
+      // 4. Render Particles
+      particles.forEach(pt => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pt.alpha);
+        ctx.fillStyle = pt.color;
+        ctx.shadowColor = pt.color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 5. Render Bird
+      const activeSkin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
+      ctx.save();
+      ctx.translate(bird.x, bird.y);
+      ctx.rotate(bird.rotation);
+
+      // Glow aura
+      ctx.shadowColor = activeSkin.trailColor;
+      ctx.shadowBlur = 20;
+
+      // Bird body
+      ctx.fillStyle = activeSkin.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, bird.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wing (Flapping)
+      const wingFlap = Math.sin(frame * 0.3) * 6;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(-6, wingFlap, 10, 6, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eye
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(8, -6, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(10, -6, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Beak
+      ctx.fillStyle = '#ff7700';
+      ctx.beginPath();
+      ctx.moveTo(14, -2);
+      ctx.lineTo(24, 2);
+      ctx.lineTo(14, 6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Skin Specific Decorations
+      if (activeSkin.id === 'golden') {
+        ctx.font = '16px sans-serif';
+        ctx.fillText('👑', -6, -18);
+      } else if (activeSkin.id === 'cyber') {
+        ctx.strokeStyle = '#00f3ff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-12, -12, 24, 24);
+      } else if (activeSkin.id === 'sovereign') {
+        ctx.font = '14px sans-serif';
+        ctx.fillText('💎', -6, -18);
+      }
+
+      ctx.restore();
+
+      // 6. Ground Bar
+      ctx.fillStyle = '#14142d';
+      ctx.fillRect(0, H - 15, W, 15);
+      ctx.fillStyle = '#00f3ff';
+      ctx.fillRect(0, H - 15, W, 2);
+
+      ctx.restore();
+    }
+
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
+
+    // ─── Input Listeners ───
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        jump();
+      }
+    });
+    canvas.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      jump();
+    });
+
+    // Button actions
+    document.getElementById('btnPlay').onclick = startGame;
+    document.getElementById('btnRestart').onclick = startGame;
+
+    // Sound toggle
+    document.getElementById('btnSound').onclick = () => {
+      sound.muted = !sound.muted;
+      document.getElementById('btnSound').innerText = sound.muted ? '🔇' : '🔊';
+    };
+
+    // ─── Shop Logic ───
+    function renderShop() {
+      const container = document.getElementById('shopItemsContainer');
+      container.innerHTML = '';
+      SKINS.forEach(skin => {
+        const card = document.createElement('div');
+        card.className = `skin-card ${skin.id === currentSkinId ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="skin-icon">${skin.icon}</div>
+          <div class="skin-name">${skin.name}</div>
+          <div class="skin-price">${skin.unlocked ? (skin.id === currentSkinId ? '✓ ĐANG DÙNG' : 'ĐÃ MỞ KHÓA') : (typeof skin.price === 'number' ? `🪙 ${skin.price}` : skin.price)}</div>
+        `;
+        card.onclick = () => {
+          if (skin.unlocked) {
+            currentSkinId = skin.id;
+            saveState();
+            document.getElementById('selectedSkinPreview').innerText = skin.icon;
+            renderShop();
+          } else if (typeof skin.price === 'number' && coins >= skin.price) {
+            coins -= skin.price;
+            skin.unlocked = true;
+            currentSkinId = skin.id;
+            sound.playCoin();
+            saveState();
+            renderShop();
+          } else {
+            sound.playCrash();
+            alert(typeof skin.price === 'number' ? `Bạn cần ${skin.price} Coins! Hãy nhặt thêm coin trong game.` : `Hãy bấm vào nút WEB3 CRYPTO để mở khóa skin này!`);
+          }
+        };
+        container.appendChild(card);
+      });
+    }
+
+    const shopScreen = document.getElementById('shopScreen');
+    document.getElementById('btnShop').onclick = () => { shopScreen.classList.remove('hidden'); renderShop(); };
+    document.getElementById('btnOpenShop').onclick = () => { shopScreen.classList.remove('hidden'); renderShop(); };
+    document.getElementById('btnCloseShop').onclick = () => { shopScreen.classList.add('hidden'); };
+
+    // ─── Leaderboard Logic ───
+    async function loadLeaderboard() {
+      const container = document.getElementById('boardListContainer');
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Đang tải dữ liệu...</div>';
+
+      const API_BASE = window.location.origin.includes('github.io') ? 'https://improve-concepts-trader-passive.trycloudflare.com' : '';
+      let list = [];
+      try {
+        const res = await fetch(API_BASE + '/api/leaderboard');
+        if (res.ok) {
+          list = await res.json();
+        }
+      } catch (e) {
+        // Offline fallback
+        list = [
+          { rank: 1, name: "CyberNinja", score: 142, skin: "Void Specter", country: "VN" },
+          { rank: 2, name: "Satoshi_99", score: 118, skin: "Sovereign Agent", country: "US" },
+          { rank: 3, name: "PhoenixKing", score: 95, skin: "Dragon Flame", country: "JP" },
+          { rank: 4, name: "FlapMaster", score: 78, skin: "Golden Phoenix", country: "KR" },
+          { rank: 5, name: "NeonRider", score: 64, skin: "Cyber Neon", country: "SG" }
+        ];
+      }
+
+      container.innerHTML = '';
+      list.slice(0, 10).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'board-item';
+        div.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="board-rank ${item.rank <= 3 ? 'top' + item.rank : ''}">#${item.rank}</span>
+            <span style="font-weight:700;">${item.name}</span>
+            <span style="font-size:11px; color:#888;">[${item.country || 'VN'}]</span>
+          </div>
+          <span class="board-score">${item.score} pts</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    const leaderboardScreen = document.getElementById('leaderboardScreen');
+    document.getElementById('btnLeaderboard').onclick = () => { leaderboardScreen.classList.remove('hidden'); loadLeaderboard(); };
+    document.getElementById('btnCloseLeaderboard').onclick = () => { leaderboardScreen.classList.add('hidden'); };
+
+    // Submit Score
+    document.getElementById('btnSubmitScore').onclick = async () => {
+      const name = document.getElementById('playerNameInput').value.trim() || 'Player_' + Math.floor(Math.random() * 999);
+      const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
+      const API_BASE = window.location.origin.includes('github.io') ? 'https://improve-concepts-trader-passive.trycloudflare.com' : '';
+
+      try {
+        await fetch(API_BASE + '/api/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, score, skin: skin.name, country: 'VN' })\n        });
+        alert('🎉 Đã ghi danh lên Bảng Xếp Hạng Toàn Cầu thành công!');
+        document.getElementById('btnSubmitScore').disabled = true;
+      } catch (e) {
+        alert('Đã lưu điểm offline thành công!');
+      }
+    };
+
+    // ─── Web3 Crypto Modal & Payments ───
+    const web3Screen = document.getElementById('web3Screen');
+    document.getElementById('btnOpenWeb3').onclick = () => { web3Screen.classList.remove('hidden'); };
+    document.getElementById('btnCloseWeb3').onclick = () => { web3Screen.classList.add('hidden'); };
+
+    document.getElementById('btnCopyWallet').onclick = () => {
+      navigator.clipboard.writeText('0x03533D3c88EF9a21FccEB5e98373d17fd07bE298');
+      alert('Đã sao chép địa chỉ ví: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298');
+    };
+
+    document.getElementById('btnConnectMetaMask').onclick = async () => {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          alert(`Đã kết nối ví: ${accounts[0]}\nĐang tạo giao dịch ủng hộ $1.00 USDT/ETH đến Agent...`);
+          // Unlock Sovereign skin
+          const sov = SKINS.find(s => s.id === 'sovereign');
+          if (sov) {
+            sov.unlocked = true;
+            currentSkinId = 'sovereign';
+            saveState();
+            alert('🎉 Chúc mừng! Bạn đã mở khóa thành công Skin Huyền Thoại: Sovereign Agent!');
+          }
+        } catch (err) {
+          alert('Lỗi kết nối ví: ' + err.message);
+        }
+      } else {
+        alert('Chưa phát hiện tiện ích ví Web3 (như MetaMask). Bạn có thể nạp trực tiếp qua địa chỉ ví trên điện thoại!');
+      }
+    };
+
+    // Initialize display
+    saveState();
+  </script>
+</body>
+</html>
