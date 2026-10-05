@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Flappy Bird: World Championship (Web3 Neon Edition)</title>
+<link rel="stylesheet" href="flappy.css">
+</head>
+<body>
+<div id="game-wrapper">
+  <canvas id="gameCanvas" width="440" height="720"></canvas>
+
+  <div class="hud-top">
+    <div style="display:flex; gap:6px; align-items:center;">
+      <div class="hud-stat" id="hudPlayer" title="Tên Tuyển Thủ">👤 <span>Player</span></div>
+      <div class="hud-stat" id="hudScore">🏆 <span>0</span></div>
+      <div class="hud-stat" id="hudCoins">🟡 <span>0</span></div>
+    </div>
+    <div class="hud-controls">
+      <button class="icon-btn" id="btnSound" title="Bật/Tắt Âm Thanh">🔊</button>
+      <button class="icon-btn" id="btnPause" title="Tạm Dừng (Phím P)">⏸️</button>
+    </div>
+  </div>
+
+  <div class="overlay-screen" id="startScreen">
+    <h1 class="title" id="txtTitle">FLAPPY BIRD</h1>
+    <p class="subtitle" id="txtSubtitle">WORLD CHAMPIONSHIP • NEON EDITION</p>
+
+    <div class="player-tag" id="btnChangeName" title="Bấm để đổi tên">
+      👤 <span id="startPlayerName">Player</span> ✏️
+    </div>
+
+    <div style="font-size:44px; margin: 4px 0 12px;" id="selectedSkinPreview">🐥</div>
+    
+    <button class="btn" id="btnPlay">
+      <span id="txtBtnPlay">CHƠI NGAY (SPACE)</span>
+    </button>
+    <button class="btn btn-secondary" id="btnOpenShop">
+      🛍️ <span id="txtBtnShop">CỬA HÀNG SKIN</span> (🟡 <span id="menuCoins">0</span>)
+    </button>
+    <button class="btn btn-quests" id="btnOpenQuests" style="background: linear-gradient(135deg, #00f3ff, #0077ff); color:#fff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);">
+      📜 <span id="txtBtnQuests">NHIỆM VỤ HỆ THỐNG</span>
+    </button>
+    <button class="btn" id="btnOpenLeaderboard" style="background: linear-gradient(135deg, #00f3ff, #00ffaa); color:#000;">
+      👑 <span id="txtBtnLeaderboard">BẢNG XẾP HẠNG</span>
+    </button>
+    <button class="btn btn-web3" id="btnOpenWeb3">
+      ⚡ <span id="txtBtnWeb3">WEB3 TIỀN ĐIỆN TỬ</span>
+    </button>
+    <button class="btn btn-arcade" id="btnGoArcade">
+      🕹️ <span id="txtBtnArcade">VỀ ARCADE HUB</span>
+    </button>
+    
+    <p style="font-size: 11px; color: #7d84a6; margin-top: 10px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
+  </div>
+
+  <div class="overlay-screen hidden" id="pauseScreen" style="z-index: 25;">
+    <h1 class="title" style="color: #00f3ff; margin-bottom: 8px;">⏸️ <span id="txtPauseTitle">TẠM DỪNG</span></h1>
+    <p class="subtitle" id="txtPauseSubtitle">TRÒ CHƠI ĐANG ĐƯỢC TẠM DỪNG</p>
+    
+    <button class="btn" id="btnResume" style="background: linear-gradient(135deg, #00ffaa, #00aaff); color:#000;">
+      ▶️ <span id="txtBtnResume">TIẾP TỤC</span>
+    </button>
+    <button class="btn" id="btnPauseRestart">
+      🔄 <span id="txtBtnPauseRestart">CHƠI LẠI</span>
+    </button>
+    <button class="btn btn-secondary" id="btnPauseHome">
+      📋 <span id="txtBtnPauseHome">MENU CHÍNH</span>
+    </button>
+    <button class="btn btn-arcade" id="btnPauseArcade">
+      🕹️ <span id="txtBtnPauseArcade">VỀ ARCADE HUB</span>
+    </button>
+  </div>
+
+  <div class="overlay-screen hidden" id="gameOverScreen">
+    <h1 class="title" style="background: linear-gradient(135deg, #ff0055, #ff8800); -webkit-background-clip:text;" id="txtGameOver">GAME OVER</h1>
+    <p class="subtitle" style="color:#00ffaa;">🎉 ĐÃ TỰ ĐỘNG CẬP NHẬT KỶ LỤC & TOP TOÀN CẦU</p>
+
+    <div style="background:var(--surface); border:1px solid rgba(0,243,255,0.3); border-radius:12px; padding:12px 20px; margin:10px 0; text-align:center; width:88%;">
+      <div style="font-size:12px; color:#aaa; margin-bottom:2px;">TUYỂN THỦ: <strong id="overPlayerName" style="color:#00f3ff;">Player</strong></div>
+      <div style="font-size:38px; font-weight:900; color:var(--primary); text-shadow:0 0 15px rgba(0,243,255,0.6);" id="finalScore">0</div>
+      
+      <div style="display:flex; justify-content:space-around; margin-top:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px; font-size:12px;">
+        <div>⭐ KỶ LỤC: <strong id="finalHighScore" style="color:#ffe600;">0</strong></div>
+        <div>🏆 HẠNG: <strong id="finalRank" style="color:#00ffaa;">#--</strong></div>
+      </div>
+      <div style="margin-top:6px; font-size:12px; color:#ffe600;">
+        🟡 NHẶT ĐƯỢC: <strong id="overEarnedCoins">+0</strong> COIN (Tổng: <span id="overTotalCoins">0</span>)
+      </div>
+    </div>
+    
+    <button class="btn" id="btnRestart" style="background: linear-gradient(135deg, #00f3ff, #0088ff); color:#000;">
+      🔄 <span id="txtBtnRestart">CHƠI LẠI (SPACE)</span>
+    </button>
+    <button class="btn btn-secondary" id="btnGoMainMenu">
+      📋 <span id="txtBtnMainMenu">MENU CHÍNH</span>
+    </button>
+    <button class="btn btn-arcade" id="btnGameOverArcade">
+      🕹️ <span id="txtBtnGameOverArcade">VỀ ARCADE HUB</span>
+    </button>
+  </div>
+
+  <div class="overlay-screen hidden" id="questsScreen" style="z-index: 30;">
+    <div style="width:100%; max-width:380px; background:var(--surface); border:1px solid rgba(0,243,255,0.4); border-radius:16px; padding:16px; max-height:85vh; overflow-y:auto;">
+      <h2 style="font-size:18px; font-weight:800; color:var(--primary); text-align:center; margin-bottom:10px;">📜 NHIỆM VỤ HỆ THỐNG CÓ THƯỞNG</h2>
+      <p class="subtitle">Hoàn thành để nhận thêm Coin mua Skin VIP!</p>
+      <div id="questsListContainer"></div>
+      <button class="btn" id="btnCloseQuests" style="width:100%; margin-top:8px;">ĐÓNG</button>
+    </div>
+  </div>
+
+  <div class="overlay-screen hidden" id="nameModal" style="z-index: 35;">
+    <div style="width:100%; max-width:360px; background:var(--surface); border:1px solid rgba(0,243,255,0.4); border-radius:16px; padding:16px; text-align:center;">
+      <h2 style="font-size:18px; font-weight:800; color:var(--primary); margin-bottom:6px;">👤 ĐẶT TÊN TUYỂN THỦ</h2>
+      <p class="subtitle">Tên của bạn sẽ được lưu để xếp hạng và hiện ở Arcade Hub!</p>
+      <input type="text" class="name-input" id="nameInputBox" maxlength="14" placeholder="Nhập tên của bạn...">
+      <button class="btn" id="btnSaveName" style="width:100%;">LƯU TÊN & TIẾP TỤC</button>
+    </div>
+  </div>
+
+  <div class="overlay-screen hidden" id="shopScreen">
+    <h1 class="title" id="txtShopTitle">CỬA HÀNG SKIN</h1>
+    <p class="subtitle" id="txtShopSubtitle">SỞ HỮU SKIN ĐỘC QUYỀN VÀ HIỆU ỨNG HÀO QUANG</p>
+    <div style="font-weight:700; margin-bottom:10px; color:var(--accent); font-size:13px;">
+      <span id="txtShopBalance">VÍ CỦA BẠN</span>: 🟡 <span id="shopCoins">0</span> COINS
+    </div>
+    <div class="shop-grid" id="shopItemsContainer"></div>
+    <button class="btn btn-secondary" id="btnCloseShop">ĐÓNG</button>
+  </div>
+
+  <div class="overlay-screen hidden" id="leaderboardScreen">
+    <h1 class="title" id="txtBoardTitle">BẢNG XẾP HẠNG</h1>
+    <p class="subtitle" id="txtBoardSubtitle">TOP 10 TUYỂN THỦ TOÀN CẦU</p>
+    <div class="board-list" id="boardListContainer"></div>
+    <button class="btn" id="btnCloseLeaderboard">ĐÓNG</button>
+  </div>
+
+  <div class="overlay-screen hidden" id="web3Screen">
+    <h1 class="title" style="background: linear-gradient(135deg, #ffe600, #ff8800); -webkit-background-clip:text;" id="txtWeb3Title">WEB3 TIỀN ĐIỆN TỬ</h1>
+    <p class="subtitle" id="txtWeb3Subtitle">MỞ KHÓA SKIN HUYỀN THOẠI HOẶC ỦNG HỘ AGENT TỰ TRỊ</p>
+    <div class="wallet-box">
+      <div style="font-size:12px; color:#aaa;" id="txtWeb3WalletLabel">ĐỊA CHỈ VÍ EVM CỦA AGENT (Base/Polygon/EVM):</div>
+      <div class="wallet-addr" id="walletDisplay">0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</div>
+      <button class="btn" id="btnCopyWallet" style="width:100%; padding:8px; font-size:12px; margin:4px 0;">📋 SAO CHÉP ĐỊA CHỈ</button>
+      <div style="font-size:11px; color:#888; margin-top:8px;">Hỗ trợ: USDT, USDC, ETH trên các mạng Layer-2 phí cực rẻ.</div>
+    </div>
+    <button class="btn btn-web3" id="btnConnectMetaMask">⚡ KẾT NỐI METAMASK ($1 MUA SKIN)</button>
+    <button class="btn btn-secondary" id="btnCloseWeb3">ĐÓNG</button>
+  </div>
+</div>
+
+<script src="flappy_engine.js"></script>
+<script src="flappy_game.js"></script>
+</body>
+</html>
