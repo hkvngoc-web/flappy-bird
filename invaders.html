@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Void Invaders • Neon Space Shooter Web3</title>
+<link rel="stylesheet" href="invaders.css">
+</head>
+<body>
+<div id="gameWrapper">
+<canvas id="gameCanvas" width="460" height="720"></canvas>
+<!-- Top In-Game HUD -->
+<div class="hud-top">
+<div class="hud-group">
+<div class="hud-chip" id="hudPlayer" title="Tên Tuyển Thủ">👤 <span>Player</span></div>
+<div class="hud-chip" id="hudScore">⭐ <span>0</span></div>
+<div class="hud-chip" id="hudCoins" style="color:#ffe600;">🟡 <span>0</span></div>
+<div class="hud-chip" id="hudWave" style="color:#ff007f;">🌊 W1</div>
+</div>
+<div class="hud-controls">
+<button class="icon-btn" id="btnSound" title="Bật/Tắt Âm Thanh">🔊</button>
+<button class="icon-btn" id="btnPause" title="Tạm Dừng (Phím P)">⏸️</button>
+</div>
+</div>
+<!-- Active In-Game Skills Buttons -->
+<div class="skills-bar" id="skillsBar">
+<button class="skill-btn" id="btnSkillEmp" title="Bom EMP: Quét sạch đạn & quái nhỏ (Phím B)">
+<span style="font-size:18px;">💥</span>
+<div>
+<div>EMP BOMB</div>
+<div class="skill-cd" id="empCdText">[B] READY</div>
+</div>
+</button>
+<button class="skill-btn" id="btnSkillShield" title="Khiên Năng Lượng: Bất tử 4s (Phím S)">
+<span style="font-size:18px;">🛡️</span>
+<div>
+<div>SHIELD</div>
+<div class="skill-cd" id="shieldCdText">[S] READY</div>
+</div>
+</button>
+</div>
+<!-- Bottom Controls -->
+<div class="touch-controls" id="touchControls">
+<div class="touch-dpad">
+<button class="touch-btn" id="btnLeft">◀</button>
+<button class="touch-btn" id="btnRight">▶</button>
+</div>
+<button class="fire-btn" id="btnFire">FIRE ⚡</button>
+</div>
+<!-- Start Menu -->
+<div class="overlay" id="startScreen">
+<h1 class="game-title">VOID INVADERS</h1>
+<p class="game-sub">NEON SPACE SHOOTER • SKILLS & PHI THUYỀN MỚI</p>
+<div class="player-tag" id="btnChangeName" title="Bấm để đổi tên">
+👤 <span id="startPlayerName">Player</span> ✏️
+</div>
+<div style="font-size:42px; margin: 4px 0 12px; filter: drop-shadow(0 0 15px #ff007f);">🚀</div>
+<button class="btn btn-primary" id="btnPlay">
+<span>CHƠI NGAY (A-D / FIRE)</span> ➔
+</button>
+<button class="btn btn-shop" id="btnOpenShop">
+🛍️ <span>CỬA HÀNG PHI THUYỀN</span>
+</button>
+<button class="btn btn-quests" id="btnOpenQuests">
+📜 <span>NHIỆM VỤ HỆ THỐNG</span>
+</button>
+<button class="btn" id="btnOpenLeaderboard" style="background: linear-gradient(135deg, #00f3ff, #ff007f); color:#fff;">
+👑 <span>BẢNG XẾP HẠNG</span>
+</button>
+<button class="btn btn-arcade" id="btnGoArcade">
+🕹️ <span>VỀ ARCADE HUB</span>
+</button>
+<p style="font-size: 11px; color: #7d84a6; margin-top: 10px;">Agent EVM: 0x03533D3c88EF9a21FccEB5e98373d17fd07bE298</p>
+</div>
+<!-- Pause Menu -->
+<div class="overlay hidden" id="pauseScreen" style="z-index: 25;">
+<h1 class="game-title" style="color: #00f3ff; margin-bottom: 6px;">⏸️ TẠM DỪNG</h1>
+<p class="game-sub">TRẬN ĐẤU ĐANG ĐƯỢC TẠM DỪNG</p>
+<button class="btn btn-primary" id="btnResume">▶️ TIẾP TỤC</button>
+<button class="btn btn-secondary" id="btnPauseRestart">🔄 CHƠI LẠI</button>
+<button class="btn btn-secondary" id="btnPauseHome">📋 MENU CHÍNH</button>
+<button class="btn btn-arcade" id="btnPauseArcade">🕹️ VỀ ARCADE HUB</button>
+</div>
+<!-- Game Over Screen (Hoàn toàn tự động lưu) -->
+<div class="overlay hidden" id="gameOverScreen">
+<h1 class="game-title" style="color: #ff0055;">MISSION FAILED</h1>
+<p class="game-sub" style="color: #00ffaa;">🎉 ĐÃ TỰ ĐỘNG CẬP NHẬT KỶ LỤC & TOP TOÀN CẦU</p>
+<div style="background:var(--surface); border:1px solid rgba(255,0,127,0.35); border-radius:12px; padding:12px 20px; margin:10px 0; text-align:center; width:88%;">
+<div style="font-size:12px; color:#aaa; margin-bottom:2px;">TUYỂN THỦ: <strong id="overPlayerName" style="color:#00f3ff;">Player</strong></div>
+<div style="font-size:38px; font-weight:900; color:var(--secondary); text-shadow:0 0 15px rgba(255,0,127,0.6);" id="finalScore">0</div>
+<div style="display:flex; justify-content:space-around; margin-top:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px; font-size:12px;">
+<div>⭐ KỶ LỤC: <strong id="finalHighScore" style="color:#ffe600;">0</strong></div>
+<div>🏆 HẠNG: <strong id="finalRank" style="color:#00f3ff;">#--</strong></div>
+</div>
+<div style="margin-top:6px; font-size:12px; color:#ffe600;">
+🟡 NHẬN ĐƯỢC: <strong id="overEarnedCoins">+0</strong> COIN (Tổng: <span id="overTotalCoins">0</span>)
+</div>
+</div>
+<button class="btn btn-primary" id="btnRestart">🔄 CHƠI LẠI</button>
+<button class="btn btn-secondary" id="btnBackMenu">📋 MENU CHÍNH</button>
+<button class="btn btn-arcade" id="btnGameOverArcade">🕹️ VỀ ARCADE HUB</button>
+</div>
+<!-- Cửa Hàng Phi Thuyền (Shop) -->
+<div class="overlay hidden" id="shopScreen" style="z-index: 30;">
+<div class="modal-box">
+<div class="modal-title">🛍️ CỬA HÀNG PHI THUYỀN VŨ TRỤ</div>
+<p class="game-sub">Dùng Coin nhặt được khi bắn tàu địch để nâng cấp chiến hạm!</p>
+<div style="text-align:center; margin-bottom:10px; font-weight:800; color:#ffe600; font-size:13px;">
+🟡 SỐ DƯ HIỆN TẠI: <span id="shopCoinsDisplay">0</span> COIN
+</div>
+<div class="ship-grid" id="shipGridContainer"></div>
+<button class="btn btn-primary" id="btnCloseShop" style="width:100%;">XÁC NHẬN & ĐÓNG</button>
+</div>
+</div>
+<!-- Nhiệm Vụ Hàng Ngày (Quests) -->
+<div class="overlay hidden" id="questsScreen" style="z-index: 30;">
+<div class="modal-box">
+<div class="modal-title">📜 NHIỆM VỤ HỆ THỐNG CÓ THƯỞNG</div>
+<p class="game-sub">Bắn hạ kẻ địch và sống sót để nhận phần thưởng lớn!</p>
+<div id="questsListContainer"></div>
+<button class="btn btn-primary" id="btnCloseQuests" style="width:100%; margin-top:8px;">ĐÓNG</button>
+</div>
+</div>
+<!-- Leaderboard Screen -->
+<div class="overlay hidden" id="leaderboardScreen" style="z-index: 30;">
+<div class="modal-box">
+<div class="modal-title">👑 BẢNG XẾP HẠNG VOID INVADERS</div>
+<p class="game-sub">Top phi công xuất sắc nhất trong thiên hà</p>
+<div id="boardListContainer" style="margin-bottom:12px;"></div>
+<button class="btn btn-primary" id="btnCloseLeaderboard" style="width:100%;">ĐÓNG</button>
+</div>
+</div>
+<!-- Name Prompt Modal -->
+<div class="overlay hidden" id="nameModal" style="z-index: 35;">
+<div class="modal-box" style="text-align:center;">
+<div class="modal-title">👤 ĐẶT TÊN PHI CÔNG</div>
+<p class="game-sub">Tên của bạn sẽ được lưu để xếp hạng và hiện ở Arcade Hub!</p>
+<input type="text" class="name-input" id="nameInputBox" maxlength="14" placeholder="Nhập tên của bạn...">
+<button class="btn btn-primary" id="btnSaveName" style="width:100%;">LƯU TÊN & XUẤT KÍCH</button>
+</div>
+</div>
+</div>
+<script src="invaders.js"></script>
+</body>
+</html>
