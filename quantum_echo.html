@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quantum Echo 2026 • Hyper Pulse • Conway Automaton AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #03030a;
+      --cyan: #00f3ff;
+      --magenta: #ff007f;
+      --accent: #ffe600;
+      --green: #00ffaa;
+      --card-bg: rgba(12, 12, 28, 0.88);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: none;
+    }
+    .neon-grid {
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 50% 30%, rgba(0, 243, 255, 0.08) 0%, transparent 60%),
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .game-wrapper {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 500px;
+      padding: 10px;
+    }
+    /* Top Bar HUD */
+    .hud-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      border-radius: 14px;
+      padding: 8px 14px;
+      margin-bottom: 8px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 243, 255, 0.15);
+    }
+    .hud-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hud-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8892b0;
+      font-weight: 600;
+    }
+    .hud-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .hud-value.phase-cyan {
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan);
+    }
+    .hud-value.phase-magenta {
+      color: var(--magenta);
+      text-shadow: 0 0 10px var(--magenta);
+    }
+    .hud-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 6px 10px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover {
+      background: rgba(0, 243, 255, 0.2);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    /* Canvas Box */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      max-height: 70vh;
+      background: #000;
+      border-radius: 16px;
+      border: 2px solid rgba(0, 243, 255, 0.4);
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      touch-action: none;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Controls Bar */
+    .controls-hint {
+      width: 100%;
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #a0aec0;
+      background: rgba(10, 10, 25, 0.6);
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .btn-action-phase {
+      background: linear-gradient(135deg, var(--cyan), var(--magenta));
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+      transition: all 0.15s;
+    }
+    .btn-action-phase:active {
+      transform: scale(0.96);
+    }
+
+    /* Modals Overlay */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 3, 10, 0.88);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 100;
+      text-align: center;
+    }
+    .modal-overlay.hidden {
+      display: none;
+    }
+    .modal-title {
+      font-size: 28px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(0, 243, 255, 0.5);
+    }
+    .modal-desc {
+      font-size: 13px;
+      color: #a0aec0;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      max-width: 320px;
+    }
+    .modal-desc b {
+      color: #fff;
+    }
+    .btn-start {
+      background: linear-gradient(135deg, #00f3ff, #0088ff);
+      color: #030310;
+      font-weight: 900;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 12px 34px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.6);
+      transition: all 0.2s;
+    }
+    .btn-start:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 35px rgba(0, 243, 255, 0.9);
+    }
+
+    .game-over-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 44px;
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(255, 230, 0, 0.6);
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="neon-grid"></div>
+
+  <div class="game-wrapper">
+    <!-- Top HUD -->
+    <div class="hud-bar">
+      <div class="hud-stat">
+        <span class="hud-label">Điểm Số</span>
+        <span class="hud-value" id="hudScore">0</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">Pha Lượng Tử</span>
+        <span class="hud-value phase-cyan" id="hudPhase">CYAN</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">Mạng Khiên</span>
+        <span class="hud-value" id="hudShield">3</span>
+      </div>
+      <div class="hud-btns">
+        <a href="index.html" class="btn-icon" title="Về Arcade Hub">🏠 Hub</a>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="gameCanvas" width="480" height="640"></canvas>
+
+      <!-- Start Overlay -->
+      <div class="modal-overlay" id="startModal">
+        <div class="modal-title">QUANTUM ECHO</div>
+        <div style="font-size: 12px; color: var(--cyan); margin-bottom: 12px; font-weight: 700; letter-spacing: 1px;">⚡ HYPER PULSE RUNNER 2026</div>
+        <div class="modal-desc">
+          🚀 <b>Di chuyển chuột / cảm ứng</b> để né chướng ngại vật.<br>
+          ⚡ <b>Bấm Space / Tap màn hình</b> để <span style="color:var(--cyan)">ĐỔI PHA</span> giữa <b>CYAN</b> & <b>MAGENTA</b>.<br>
+          ✨ Lao qua cổng <b>CÙNG MÀU</b> để nuốt năng lượng (+100đ, Combo x2). Khác màu sẽ mất khiên!
+        </div>
+        <button class="btn-start" id="btnStartGame">CHIẾN NGAY</button>
+      </div>
+
+      <!-- Solo Match Top Banner -->
+      <div id="soloHudBanner" style="display:none; position:absolute; top:8px; left:12px; right:12px; z-index:30; background:linear-gradient(135deg, rgba(255,0,85,0.95), rgba(255,136,0,0.95)); border-radius:8px; padding:6px 12px; justify-content:space-between; align-items:center; font-size:11px; font-weight:800; color:#fff; box-shadow:0 0 15px rgba(255,0,85,0.6);">
+        <span id="soloOpponentText">⚔️ SOLO VS: Đối Thủ</span>
+        <span id="soloBetText" style="color:#ffcc00; font-family:monospace;">CƯỢC: 50 COIN</span>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div class="modal-overlay hidden" id="gameOverModal">
+        <div class="modal-title" style="color: var(--magenta);">TOANG LƯỢNG TỬ</div>
+        <div style="font-size: 12px; color: #8892b0; margin-bottom: 6px;">ĐIỂM KẾT THÚC</div>
+        <div class="game-over-score" id="finalScore">0</div>
+        <div id="saveStatus" style="font-size: 13px; color: var(--green); margin-bottom: 16px;">Đã lưu kỷ lục lên BXH Toàn Cầu!</div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-start" id="btnRestart">CHƠI LẠI</button>
+          <a href="index.html" class="btn-start" style="background: rgba(255,255,255,0.1); color:#fff; text-decoration:none; display:flex; align-items:center;">VỀ HUB</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls Hint & Mobile Touch Button -->
+    <div class="controls-hint">
+      <span>🖱️ Chuột / Vuốt: Lượn lách</span>
+      <button class="btn-action-phase" id="btnPhaseShift">⚡ ĐỔI PHA (SPACE / TAP)</button>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSoloMode = urlParams.get('mode') === 'solo';
+    const soloMatchId = urlParams.get('match_id');
+    const soloOpponent = urlParams.get('opponent');
+    const soloBet = urlParams.get('bet');
+
+    if (isSoloMode && soloMatchId) {
+      window.addEventListener('DOMContentLoaded', () => {
+        const banner = document.getElementById('soloHudBanner');
+        if (banner) {
+          banner.style.display = 'flex';
+          document.getElementById('soloOpponentText').innerText = `⚔️ SOLO VS: ${soloOpponent || 'Đối Thủ'}`;
+          document.getElementById('soloBetText').innerText = `CƯỢC: ${soloBet || 0} COIN`;
+        }
+      });
+    }
+
+    // Audio Synth Engine
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq, type = 'sine', duration = 0.1, gainVal = 0.15) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    function soundShift() {
+      playBeep(player.phase === 'cyan' ? 680 : 420, 'triangle', 0.12, 0.2);
+    }
+    function soundCollect() {
+      playBeep(880, 'sine', 0.1, 0.2);
+      setTimeout(() => playBeep(1320, 'sine', 0.15, 0.2), 60);
+    }
+    function soundHit() {
+      playBeep(150, 'sawtooth', 0.25, 0.3);
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const hudScore = document.getElementById('hudScore');
+    const hudPhase = document.getElementById('hudPhase');
+    const hudShield = document.getElementById('hudShield');
+    const startModal = document.getElementById('startModal');
+    const gameOverModal = document.getElementById('gameOverModal');
+    const finalScoreEl = document.getElementById('finalScore');
+    const btnStartGame = document.getElementById('btnStartGame');
+    const btnRestart = document.getElementById('btnRestart');
+    const btnPhaseShift = document.getElementById('btnPhaseShift');
+
+    let gameRunning = false;
+    let score = 0;
+    let speed = 4;
+    let frame = 0;
+    let shake = 0;
+
+    const player = {
+      x: 240,
+      y: 530,
+      targetX: 240,
+      radius: 18,
+      phase: 'cyan', // 'cyan' or 'magenta'
+      shield: 3,
+      combo: 0
+    };
+
+    let gates = [];
+    let crystals = [];
+    let particles = [];
+
+    function triggerPhaseShift() {
+      if (!gameRunning) return;
+      player.phase = player.phase === 'cyan' ? 'magenta' : 'cyan';
+      hudPhase.textContent = player.phase.toUpperCase();
+      hudPhase.className = `hud-value phase-${player.phase}`;
+      soundShift();
+
+      // Spawn burst particles
+      for (let i = 0; i < 15; i++) {
+        particles.push({
+          x: player.x,
+          y: player.y,
+          vx: (Math.random() - 0.5) * 8,
+          vy: (Math.random() - 0.5) * 8,
+          color: player.phase === 'cyan' ? '#00f3ff' : '#ff007f',
+          life: 1.0
+        });
+      }
+    }
+
+    // Input handlers
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        triggerPhaseShift();
+      }
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        player.targetX = Math.max(40, player.targetX - 70);
+      }
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        player.targetX = Math.min(440, player.targetX + 70);
+      }
+    });
+
+    btnPhaseShift.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerPhaseShift();
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const clientX = (e.clientX - rect.left) * scaleX;
+      player.targetX = Math.max(35, Math.min(445, clientX));
+    });
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (gameRunning) {
+        triggerPhaseShift();
+      }
+    });
+
+    function spawnGate() {
+      const isLeft = Math.random() < 0.5;
+      const phaseColor = Math.random() < 0.5 ? 'cyan' : 'magenta';
+      const w = 180;
+      const x = isLeft ? 60 : 240;
+      gates.push({
+        x: x,
+        y: -50,
+        width: w,
+        height: 24,
+        phase: phaseColor,
+        passed: false
+      });
+    }
+
+    function spawnCrystal() {
+      crystals.push({
+        x: 40 + Math.random() * 400,
+        y: -30,
+        radius: 10,
+        vy: speed + 1
+      });
+    }
+
+    function initGame() {
+      score = 0;
+      speed = 4.5;
+      frame = 0;
+      shake = 0;
+      player.x = 240;
+      player.targetX = 240;
+      player.shield = 3;
+      player.phase = 'cyan';
+      player.combo = 0;
+      gates = [];
+      crystals = [];
+      particles = [];
+
+      hudScore.textContent = '0';
+      hudPhase.textContent = 'CYAN';
+      hudPhase.className = 'hud-value phase-cyan';
+      hudShield.textContent = '3';
+
+      startModal.classList.add('hidden');
+      gameOverModal.classList.add('hidden');
+      gameRunning = true;
+      requestAnimationFrame(loop);
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      soundHit();
+      finalScoreEl.textContent = score;
+      gameOverModal.classList.remove('hidden');
+
+      // Save highscore and coins
+      try {
+        const curHigh = parseInt(localStorage.getItem('quantum_highscore') || '0', 10);
+        if (score > curHigh) {
+          localStorage.setItem('quantum_highscore', score);
+        }
+        const coinsEarned = Math.floor(score / 40);
+        const curCoins = parseInt(localStorage.getItem('quantum_coins') || '0', 10);
+        localStorage.setItem('quantum_coins', curCoins + coinsEarned);
+        const totalCoins = parseInt(localStorage.getItem('arcade_coins') || '0', 10);
+        localStorage.setItem('arcade_coins', totalCoins + coinsEarned);
+
+        const playerName = localStorage.getItem('arcade_player_name') || localStorage.getItem('player_name') || 'CyberTraveller';
+        fetch('/api/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game: 'quantum',
+            name: playerName,
+            score: score,
+            skin: 'Overdrive Core',
+            country: 'VN'
+          })
+        }).catch(() => {});
+
+        // Handle Solo Challenge Match Result
+        if (isSoloMode && soloMatchId) {
+          const myUuid = localStorage.getItem('arcade_player_uuid') || '';
+          fetch('/api/social/challenge/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              matchId: soloMatchId,
+              playerUuid: myUuid,
+              score: score
+            })
+          }).then(r => r.json()).then(data => {
+            const statusEl = document.getElementById('saveStatus');
+            if (data.completed) {
+              if (data.winnerUuid === myUuid) {
+                statusEl.innerHTML = `🏆 <b>BẠN ĐÃ THẮNG SOLO!</b> (+${data.prize} COIN)`;
+                statusEl.style.color = '#00ffaa';
+              } else if (data.winnerUuid === 'DRAW') {
+                statusEl.innerHTML = `🤝 <b>HÒA ĐIỂM SOLO!</b> Hoàn trả ${soloBet} COIN.`;
+                statusEl.style.color = '#ffcc00';
+              } else {
+                statusEl.innerHTML = `💀 <b>BẠN ĐÃ THUA SOLO!</b> (Đối thủ đạt điểm cao hơn)`;
+                statusEl.style.color = '#ff0055';
+              }
+            } else {
+              statusEl.innerHTML = `⚔️ Đã gửi điểm (${score}đ). Đang chờ đối thủ ${soloOpponent || ''} hoàn thành!`;
+              statusEl.style.color = '#00f3ff';
+            }
+          }).catch(() => {});
+        }
+      } catch(_) {}
+    }
+
+    function loop() {
+      if (!gameRunning) return;
+      frame++;
+      speed = 4.5 + Math.min(6, frame / 600);
+
+      // Smooth position lerp
+      player.x += (player.targetX - player.x) * 0.18;
+
+      // Spawn elements
+      if (frame % Math.max(45, Math.floor(80 - speed * 4)) === 0) {
+        spawnGate();
+      }
+      if (frame % 70 === 0) {
+        spawnCrystal();
+      }
+
+      // Update gates
+      for (let i = gates.length - 1; i >= 0; i--) {
+        const g = gates[i];
+        g.y += speed;
+
+        // Collision check
+        if (!g.passed && g.y + g.height >= player.y - player.radius && g.y <= player.y + player.radius) {
+          if (player.x >= g.x && player.x <= g.x + g.width) {
+            g.passed = true;
+            if (player.phase === g.phase) {
+              // Absorbed!
+              score += 100 + player.combo * 20;
+              player.combo++;
+              soundCollect();
+              shake = 5;
+              // Burst particles
+              for (let p = 0; p < 20; p++) {
+                particles.push({
+                  x: player.x,
+                  y: player.y,
+                  vx: (Math.random() - 0.5) * 10,
+                  vy: (Math.random() - 0.5) * 10,
+                  color: g.phase === 'cyan' ? '#00f3ff' : '#ff007f',
+                  life: 1.0
+                });
+              }
+            } else {
+              // Wrong phase! Damage!
+              player.shield--;
+              player.combo = 0;
+              hudShield.textContent = player.shield;
+              soundHit();
+              shake = 15;
+              if (player.shield <= 0) {
+                gameOver();
+                return;
+              }
+            }
+          }
+        }
+
+        if (g.y > canvas.height + 50) {
+          gates.splice(i, 1);
+          score += 10;
+        }
+      }
+
+      // Update crystals
+      for (let i = crystals.length - 1; i >= 0; i--) {
+        const c = crystals[i];
+        c.y += c.vy;
+        const dist = Math.hypot(player.x - c.x, player.y - c.y);
+        if (dist < player.radius + c.radius) {
+          score += 50;
+          soundCollect();
+          crystals.splice(i, 1);
+        } else if (c.y > canvas.height + 20) {
+          crystals.splice(i, 1);
+        }
+      }
+
+      // Update particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.04;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      hudScore.textContent = score;
+
+      // Draw
+      ctx.save();
+      if (shake > 0) {
+        ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+        shake *= 0.9;
+      }
+
+      ctx.fillStyle = '#050510';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Perspective laser grid lines
+      ctx.strokeStyle = 'rgba(0, 243, 255, 0.15)';
+      ctx.lineWidth = 1;
+      for (let x = 60; x <= 420; x += 60) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      const scrollOffset = (frame * speed) % 40;
+      for (let y = scrollOffset; y < canvas.height; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Draw gates
+      gates.forEach(g => {
+        const color = g.phase === 'cyan' ? '#00f3ff' : '#ff007f';
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = color;
+        ctx.fillRect(g.x, g.y, g.width, g.height);
+
+        // Gate energy core
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(g.x + 8, g.y + 6, g.width - 16, g.height - 12);
+      });
+
+      // Draw crystals
+      crystals.forEach(c => {
+        ctx.shadowColor = '#ffe600';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#ffe600';
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw particles
+      particles.forEach(p => {
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+      });
+
+      // Draw Player Ship Core
+      const pColor = player.phase === 'cyan' ? '#00f3ff' : '#ff007f';
+      ctx.shadowColor = pColor;
+      ctx.shadowBlur = 24;
+
+      // Outer energy ring
+      ctx.strokeStyle = pColor;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius + 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Ship body (Quantum Triangle)
+      ctx.fillStyle = pColor;
+      ctx.beginPath();
+      ctx.moveTo(player.x, player.y - player.radius);
+      ctx.lineTo(player.x - player.radius, player.y + player.radius);
+      ctx.lineTo(player.x, player.y + player.radius * 0.5);
+      ctx.lineTo(player.x + player.radius, player.y + player.radius);
+      ctx.closePath();
+      ctx.fill();
+
+      // Core glow
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+      requestAnimationFrame(loop);
+    }
+
+    btnStartGame.addEventListener('click', initGame);
+    btnRestart.addEventListener('click', initGame);
+  </script>
+</body>
+</html>
